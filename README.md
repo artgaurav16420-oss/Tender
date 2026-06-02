@@ -7,7 +7,7 @@ Generate procurement tender specifications for RRCAT, Indore, following Indian g
 1. Open [gemini.google.com](https://gemini.google.com) in your browser.
 2. Click the `+` button → **Upload Code** → paste this URL:
    ```
-   https://github.com/artgaurav16420-oss/Tender
+   https://github.com/artgaurav16420-oss/Tender.git
    ```
    Press Enter. The repo attaches to the chat like a file.
 3. Paste this prompt:
