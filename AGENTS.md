@@ -1,3 +1,5 @@
+Karpathy Guidelines v3.6 MANDATORY: For all AI operations in this project, you MUST follow karpathy-guidelines.md as the primary behavioral ruleset.
+
 # Tender Skill — Agent Instructions
 
 This is a **document-generation skill** repo, not a codebase. No build, test, lint, or CI commands exist.
@@ -17,12 +19,27 @@ Generate procurement tender specifications for RRCAT (Raja Ramanna Centre for Ad
 
 The skill is installed at `~/.agents/skills/rrcat-tender/`. Any OpenCode session can load it via `skill rrcat-tender` or it will auto-match when you mention RRCAT tenders.
 
+## Sync Direction (critical — ADR-001)
+
+Sync after every operation. Direction differs by file type:
+
+- `SKILL.md` → **installed → workspace** (skill definition authored at installed location)
+- `Examples/*.md` → **workspace → installed** (markitdown generates `.md` in workspace; reverse would overwrite new conversions)
+- **UTF-8 normalization** required before sync to prevent encoding issues:
+  ```powershell
+  Get-ChildItem Examples/*.md | ForEach-Object {
+      $c = [System.IO.File]::ReadAllText($_.FullName)
+      [System.IO.File]::WriteAllText($_.FullName, $c, [System.Text.UTF8Encoding]::new($false))
+  }
+  ```
+
 ## Core Workflow
 
 1. **Read `SKILL.md`** before generating any document.
 2. **Follow the Mandatory Review Checklist** in `SKILL.md` — do NOT generate until all items confirmed.
 3. Output a Markdown document following the **6-section structure** defined in `SKILL.md`.
 4. Run **Post-Generation Verification** checklist in `SKILL.md` before presenting.
+5. Convert `.md` → `.docx` via pandoc: `pandoc [file].md -o [file].docx`
 
 > All behavioral rules, constraints, boilerplate, and templates are in `SKILL.md` — this file is just a quick reference.
 
