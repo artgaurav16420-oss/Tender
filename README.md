@@ -1,54 +1,67 @@
-# Tender Specification Generator
+# RRCAT Tender Specification Generator
 
-AI-powered skill for generating watertight procurement tender specifications following Indian government open-tendering rules. Built as an OpenCode skill with a focus on eliminating loopholes, preventing spurious bids, and protecting public procurement.
+Generate procurement tender specifications for RRCAT, Indore, following Indian government open-tendering rules. Works on Gemini web — no software to install.
 
-## Structure
+## How to Use
 
-| Path | Description |
-|------|-------------|
-| `SKILL.md` | Canonical skill definition — templates, checklists, clauses, patterns |
-| `AGENTS.md` | Agent instructions for OpenCode sessions |
-| `Examples/` | Real tender specs (`.md` AI-readable + `.pdf` original format) |
-| `docs/adr/` | Architecture decision records |
-| `Tender_Spec_Chiller_20kW.*` | Generated sample: 20kW chiller spec (MD/DOC/DOCX/PDF) |
-| `Techical Specification.pdf` | Reference technical specification |
+1. Open [gemini.google.com](https://gemini.google.com) in your browser.
+2. Click the `+` button → **Upload Code** → paste this URL:
+   ```
+   https://github.com/artgaurav16420-oss/Tender
+   ```
+   Press Enter. The repo attaches to the chat like a file.
+3. Paste this prompt:
+   ```
+   I've attached the RRCAT Tender Skill repo. Read SKILL.md and follow the Mandatory Review Checklist one question at a time, with recommended answers. After all questions are confirmed, generate the complete tender specification in Markdown. Equipment: [describe your equipment here]
+   ```
+4. Answer each question Gemini asks. Be as detailed as you can.
+5. After generation, copy the Markdown output and save it as a `.md` file.
 
-## Workflow
+> **Tip:** Answer every question in as much detail as you can. Vague answers produce weak tenders with "To Be Confirmed by RRCAT" placeholders. The more specific you are about ratings, materials, standards, and quantities, the tighter the generated spec.
 
-1. Request a tender spec for any equipment type
-2. Agent runs a **Mandatory Review Checklist** — all items must be confirmed before generation
-3. Output follows a **6-section structure**: Header, Scope, Technical Specs, BQC, Terms, Annexures
-4. **Post-Generation Verification** catches gaps before delivery
+## Tips for Best Results
 
-## Key Features
+- **Be specific with numbers** — capacity, pressure, temperature, dimensions, flow rate. "About 500L" is weaker than "500 L minimum working capacity".
+- **Name the standards you expect** — IS 2825, ASME Sec VIII, ISO 21029, etc. If you don't know, say "Indian Standard equivalent" and Gemini will suggest options.
+- **Describe the end-use clearly** — "For LN2 storage in cryogenic lab" tells Gemini more than "Storage tank".
+- **Mention operating conditions** — indoor/outdoor, ambient temperature range, available utilities (415V 3-phase, cooling water, compressed air).
+- **Specify safety requirements** — overpressure relief, emergency stop, explosion-proof rating, PESO certification if applicable.
+- **Don't worry if unsure** — Gemini will ask one question at a time and suggest recommended values. Pick the closest option or provide your own.
 
-- **Defensive clauses** — eliminates ambiguity, blocks spurious compliance
-- **Compliance sheet** — Yes/No/Complied format with signature, blocks generic "All compliance" responses
-- **Vendor-neutral** — no brand names; performance-based specs only
-- **Hold points** — PDI witness, inspection gates, testing before dispatch
-- **Bidder Qualification Criteria (BQC)** — filters unqualified bidders upfront
+## What You'll Be Asked
 
-## Examples
+Gemini will ask ~15-20 questions across these areas, one at a time:
 
-20+ real tender specs in `Examples/` covering:
+| Area | What's covered |
+|---|---|
+| Basic Info | What equipment, how many, what's it for |
+| Scope of Supply | Main items, accessories, spares, installation, training |
+| Bidder Qualification (BQC) | OEM experience needed, past installations, certifications |
+| Technical Requirements | Ratings, materials, standards, environment, safety features |
+| Quality Assurance | Tests, inspections, documents to submit |
+| Commercial Terms | Delivery timeline, packaging, warranty period |
 
-- Cryogenic systems (dewars, LN2 containers, vacuum systems)
-- Precision mechanics (EOT crane, rail systems, tank assemblies)
-- Vacuum equipment (TMP modules, gauges, piping systems)
+## Equipment Types Covered
+
+The skill includes 20+ real RRCAT tender examples covering:
+
+- Cryogenic systems (dewars, LN2 containers, VJ hoses, cryostats, cryomodules)
+- Vacuum equipment (TMP modules, gauges, DTL tanks, piping systems)
+- Precision mechanics (EOT cranes, rail systems, tank assemblies)
 - Lasers & optics (coated lenses, mirrors)
-- Safety equipment (cryogenic safety gears)
-- Utilities (chillers, argon gas supply, axial fans)
-- Particle accelerator components (cryomodules, drift tube linac parts)
+- Utilities (chillers, UHP argon gas supply, axial fans)
+- Safety equipment (cryogenic PPE)
 
-Each example includes a Learned Pattern entry noting strengths (defensive clauses, verification gates) and gaps (missing compliance sheets, brand name violations) for continuous improvement.
+## Adding New Equipment Types
 
-## Auto-Learn
+The skill learns from new tenders. If your equipment type isn't listed above, the generation will still work — Gemini adapts the checklist to your equipment.
 
-Drop a new tender PDF into `Examples/` and run `/tender-learn`. The agent will extract BQC style, table formats, and notable clauses, then add a row to the Learned Pattern Library in `SKILL.md`. Over time, the skill improves from every new tender.
+## Converting to Word (.docx)
 
-## ADR
-
-See `docs/adr/` for architecture decisions (sync direction, skill structure).
+Gemini outputs Markdown text. If you need a `.docx` file, install Pandoc and run:
+```
+pandoc filename.md -o filename.docx
+```
 
 ## License
 
