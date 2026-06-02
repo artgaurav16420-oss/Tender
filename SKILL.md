@@ -1,6 +1,7 @@
 ---
 name: rrcat-tender
 description: Generate RRCAT (Raja Ramanna Centre for Advanced Technology) procurement tender specifications following Indian government open-tendering rules. Use when user asks to create a tender specification, tender document, procurement spec, or mentions RRCAT, Raja Ramanna Centre, or Indore tender for atomic/research equipment.
+version: 1.0
 license: MIT
 ---
 
@@ -139,9 +140,16 @@ Present the `.docx` to the user.
 
 Synchronize the installed skill (`~/.agents/skills/rrcat-tender/`) with the workspace (`project root`):
 
-1. Copy `SKILL.md` from installed → workspace (overwrite)
-2. Copy all `Examples/*.md` from workspace → installed (overwrite, since markitdown generates them in workspace)
-3. Confirm: "Synced."
+1. **Normalize encoding** — convert all `.md` files to UTF-8 without BOM to prevent tooling issues:
+   ```powershell
+   Get-ChildItem Examples/*.md | ForEach-Object {
+       $c = [System.IO.File]::ReadAllText($_.FullName)
+       [System.IO.File]::WriteAllText($_.FullName, $c, [System.Text.UTF8Encoding]::new($false))
+   }
+   ```
+2. Copy `SKILL.md` from installed → workspace (overwrite)
+3. Copy all `Examples/*.md` from workspace → installed (overwrite, since markitdown generates them in workspace)
+4. Confirm: "Synced."
 
 ## Output Template (Fill-in-the-Blanks Skeleton)
 
@@ -172,7 +180,7 @@ Use this skeleton when generating the final document. Replace `[CONFIRMED_VALUE]
 Procurement of [EQUIPMENT NAME] for [PURPOSE] at RRCAT, Indore.
 
 | Item No. | Category | Item Description | Key Specifications | Qty |
-|:---|---:|:---|:---:|---:|
+|:---|:---|:---|:---:|---:|
 | 1 | Main Equipment | [CONFIRMED_DESCRIPTION] | [CONFIRMED_KEY_SPEC] | [CONFIRMED_QTY] |
 | 2 | Accessories | [CONFIRMED_DESCRIPTION] | [CONFIRMED_KEY_SPEC] | [CONFIRMED_QTY] |
 | 3 | Mandatory Spares | [CONFIRMED_DESCRIPTION] | [CONFIRMED_KEY_SPEC] | [CONFIRMED_QTY] |
@@ -224,7 +232,7 @@ Procurement of [EQUIPMENT NAME] for [PURPOSE] at RRCAT, Indore.
 
 **4.2 Documentation (to be submitted):**
 | Document | Quantity | Medium |
-|:---|:---:|:---:
+|:---|:---:|:---:|
 | Design Report / Drawing | [CONFIRMED_QTY] | Hard + Soft |
 | Material Test Certificates (CMTR) | [CONFIRMED_QTY] | Hard |
 | Calibration Certificates | [CONFIRMED_QTY] | Hard |
@@ -275,7 +283,7 @@ Procurement of [EQUIPMENT NAME] for [PURPOSE] at RRCAT, Indore.
 
 - **Units:** Prefer SI. If mixed/imperial used, show SI equivalent in parentheses (e.g. "150 bar (15 MPa)").
 - **Tables:** Extensive use of Markdown tables. Use the following alignment conventions:
-  - **Scope tables:** `|:---|---:|:---|:---:|---:|` (Item No=left, Category=right, Description=left, Specs=left, Qty=center)
+  - **Scope tables:** `|:---|:---|:---|:---:|---:|` (Item No=left, Category=left, Description=left, Specs=left, Qty=center)
   - **Technical spec tables:** `|:---|:---|:---:|` (Parameter=left, Specification=left, Standard=center)
   - **Compliance sheets:** `|:---|:---|:---|:---|:---:|` (Clause Ref=left, Parameter=left, Requirement=left, Document=left, Compliance=center)
   - **Commercial terms:** `|:---|:---|` (Term=left, Detail=left)
@@ -369,8 +377,8 @@ The skill is installed at `~/.agents/skills/rrcat-tender/` and the workspace is 
 
 | Direction | Files |
 |---|---|
-| Installed → Workspace | `SKILL.md`, `Examples/*.md` |
-| Workspace → Installed | `Examples/*.md` (newly learned) |
+| Installed → Workspace | `SKILL.md` |
+| Workspace → Installed | `Examples/*.md` |
 
 **Sync procedure (run after every operation):**
 1. Copy `SKILL.md` from installed → workspace (overwrite workspace copy)
