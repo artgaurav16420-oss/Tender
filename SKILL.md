@@ -1,9 +1,21 @@
 ---
 name: rrcat-tender
 description: Generate RRCAT (Raja Ramanna Centre for Advanced Technology) procurement tender specifications following Indian government open-tendering rules. Use when user asks to create a tender specification, tender document, procurement spec, or mentions RRCAT, Raja Ramanna Centre, or Indore tender for atomic/research equipment.
-version: 1.5
+version: 1.7
 license: MIT
 changelog: |
+  ## 1.7 (2026-07-31)
+  - Fixed OfficeCLI Command Reference: bold via run-level --prop, merged header via hmerge=restart, page break via --prop pageBreakBefore=true
+  - Added Help-First Rule: consult officecli help before guessing property names or syntax
+  - Added Shell & Escaping Discipline: path quoting, $ escaping, \n/\t interpretation, indexing rules
+  - Expanded Query selectors: style, field, empty, no-alt filters
+  - Added template merge command (officecli merge) to command reference
+  - Added Placeholder Leak Gate to Post-Generation Verification checklist
+  - Added validate + view issues + optional visual verification step
+  - Applied pageBreakBefore=true to template headings 3, 5, 7
+  ## 1.6 (2026-07-31)
+  - Expanded OfficeCLI Command Reference from 10 to 25 entries across 7 categories
+  - Added Prerequisites section with officecli install/update/verify commands
   ## 1.5 (2026-07-31)
   - Added compliance sheet instruction text section with exact reference text and style notes
   - Added colon to Acceptance Criteria title in formatting rules
@@ -199,15 +211,15 @@ After generating the tender document, verify ALL of these:
 - [ ] **Ambiguity check:** Is "Yes/No/Complied" explicitly disallowed in the compliance sheet? Add the rejection-warning instruction if missing.
 - [ ] **Evidence demand check:** Every compliance row requires specific supporting documentary evidence (not just a tick mark).
 - [ ] **Gaps from examples checklist:** Scan learned patterns for the equipment type — does your tender include equivalent defensive clauses? (e.g. if Argon example had right-to-audit, does yours? If Microscope example blocked "spec copy as catalogue", does yours?)
+- [ ] **Placeholder Leak Gate:** Run `officecli query [output].docx 'p:contains("CONFIRMED")'` and `officecli query [output].docx 'p:contains("TBD")'`. Any hit = FAIL. Fix every remaining placeholder before presenting.
 
 If any check fails, fix before presenting.
 
-**7. Convert to `.docx`:** After all checks pass, generate the `.docx` from the RRCAT template using officecli (see Quick Start step 6 for detailed workflow):
+**7. Validate + visual check:** After all checks pass, run structural validation and optional visual verification:
 ```
-Copy-Item _template.docx [output].docx
-officecli set [output].docx ... (populate all content per Formatting Rules)
-officecli close [output].docx
-officecli view [output].docx outline
+officecli validate [output].docx        # schema compliance — fail = fix before presenting
+officecli view [output].docx issues     # empty paras, missing alt text, formatting anomalies
+officecli view [output].docx screenshot --grid auto -o /tmp/preview.png  # optional visual check
 ```
 Present the `.docx` to the user.
 
@@ -397,6 +409,15 @@ officecli close [output].docx
 
 ### OfficeCLI Command Reference
 
+> **Help-First Rule:** When a property name, value, or syntax is uncertain, consult help before guessing:
+> ```
+> officecli help docx                    # List all docx elements
+> officecli help docx paragraph          # Full element schema
+> officecli help docx set paragraph      # Verb-scoped detail
+> officecli help all --json | grep -i "key"  # Search for a property name
+> ```
+> Help is pinned to the installed CLI version. When this skill and help disagree, **help is authoritative**.
+
 #### File Lifecycle
 
 | Command | Pattern | Notes |
@@ -414,38 +435,43 @@ officecli close [output].docx
 | **View text** | `officecli view [file].docx text` | Plain text content only |
 | **Get element** | `officecli get [file].docx /body/p[N]` | Read single paragraph or cell |
 | **Get JSON** | `officecli get [file].docx /body/p[N] --json` | Machine-readable with style/props |
-| **Query find** | `officecli query [file].docx "p:contains('text')"` | Find paragraph containing text |
-| **Query selector** | `officecli query [file].docx "tbl tr tc"` | CSS-like selector for elements |
+| **Query find** | `officecli query [file].docx 'p:contains("text")'` | Find paragraph containing text |
+| **Query by style** | `officecli query [file].docx 'paragraph[style=Heading1]'` | All paragraphs with a specific style |
+| **Query by field** | `officecli query [file].docx 'field[fieldType=page]'` | Find live PAGE fields (verify footer) |
+| **Query empty** | `officecli query [file].docx 'p:empty'` | Find empty paragraphs (clutter) |
+| **Query no-alt** | `officecli query [file].docx 'image:no-alt'` | Images missing alt text |
 
 #### Modify Content
 
 | Content Type | Command Pattern | Notes |
 |---|---|---|
-| **Headings** | `officecli set [file].docx /body/p[N] --style Heading1 --text "text"` | Use `Heading1`, `Heading3` per style table |
-| **Paragraphs** | `officecli set [file].docx /body/p[N] --style "Body Text" --text "text"` | Style names: `FirstParagraph`, `Body Text`, `Compact`, `Block Text`, `Normal` |
-| **Bold text** | `officecli set [file].docx /body/p[N] --bold-range START,END --text "full text"` | START/END are character offsets (0-indexed) |
+| **Headings** | `officecli set [file].docx /body/p[N] --prop style=Heading1 --prop text="text"` | Use `Heading1`, `Heading3` per style table |
+| **Paragraphs** | `officecli set [file].docx /body/p[N] --prop style="Body Text" --prop text="text"` | Style names: `FirstParagraph`, `Body Text`, `Compact`, `Block Text`, `Normal` |
+| **Bold — all runs** | `officecli set [file].docx /body/p[N] --prop bold=true` | Applies to all runs in paragraph |
+| **Bold — specific run** | `officecli set [file].docx /body/p[N]/r[M] --prop bold=true` | Run-level bold (preferred for partial bold) |
 | **Font size** | `officecli set [file].docx /body/p[N] --prop size=14` | Size in pt (not half-points) |
-| **Alignment** | `officecli set [file].docx /body/p[N] --prop align="center"` | Values: `left`, `center`, `right`, `justify` |
-| **Page break** | `officecli set [file].docx /body/p[N] --page-break-before` | Insert before major sections (3, 5, 7) |
+| **Alignment** | `officecli set [file].docx /body/p[N] --prop align=center` | Values: `left`, `center`, `right`, `justify` |
+| **Page break before** | `officecli set [file].docx /body/p[N] --prop pageBreakBefore=true` | Apply on section headings (3, 5, 7) — alias: `--prop break=newPage` |
 
 #### Modify Tables
 
 | Content Type | Command Pattern | Notes |
 |---|---|---|
-| **Table cell** | `officecli set [file].docx /body/tbl[T]/tr[R]/tc[C] --text "content"` | T=table, R=row, C=col (1-based) |
+| **Table cell text** | `officecli set [file].docx /body/tbl[T]/tr[R]/tc[C] --prop text="content"` | T=table, R=row, C=col (1-based) |
 | **Add row** | `officecli add [file].docx /body/tbl[T] --type row` | Append empty row to table |
 | **Remove cell** | `officecli remove [file].docx /body/tbl[T]/tr[R]/tc[C]` | Delete cell (use for column reduction) |
-| **Merged header** | `officecli set [file].docx /body/tbl[T]/tr[R]/tc[C] --merge-span COLS --text "Header"` | COLS = columns to span (e.g., 4) |
-| **Bold label in cell** | `officecli set [file].docx /body/tbl[T]/tr[R]/tc[C] --bold --text "Label:"` | For signature labels, BQC prefixes |
+| **Merged header** | `officecli set [file].docx /body/tbl[T]/tr[R]/tc[C] --prop hmerge=restart --prop text="Header"` | Merge starts at this cell; continues cells set `hmerge=continue` |
+| **Bold label in cell** | `officecli set [file].docx /body/tbl[T]/tr[R]/tc[C]/p[1]/r[1] --prop bold=true` | Run-level bold on cell content |
 | **Column widths** | `officecli set [file].docx /body/tbl[T] --prop colWidths="1257,7174,811"` | Comma-separated dxa values |
 
 #### Add & Remove Elements
 
 | Content Type | Command Pattern | Notes |
 |---|---|---|
-| **Add paragraph** | `officecli add [file].docx /body --type paragraph --props text="...",style="..."` | Insert new paragraph at end of body |
-| **Add after** | `officecli add [file].docx /body/p[N] --type paragraph --props text="..."` | Insert after specific paragraph |
+| **Add paragraph** | `officecli add [file].docx /body --type paragraph --prop text="..." --prop style="..."` | Insert new paragraph at end of body |
+| **Add after** | `officecli add [file].docx /body/p[N] --type paragraph --prop text="..."` | Insert after specific paragraph |
 | **Remove element** | `officecli remove [file].docx /body/p[N]` | Delete paragraph or table |
+| **Template merge** | `officecli merge [file].docx [output].docx --data '[json]'` | Replace `{{key}}` placeholders with JSON data |
 
 #### Batch Operations
 
@@ -455,12 +481,15 @@ officecli close [output].docx
 | **Dump** | `officecli dump [file].docx /body` | Serialize to replayable batch script |
 | **Validate** | `officecli validate [file].docx` | Check OpenXML schema compliance |
 
-#### Tips
+### Shell & Escaping Discipline
 
-- **Quote paths** — most shells expand `[brackets]`: `officecli get doc.docx "/body/p[1]"`
-- **Resident mode** — keep file open with `officecli open` for faster sequential edits
-- **Style not found** — if a style doesn't exist in template, officecli warns but applies reference; define style in template first or use inline formatting
-- **Path syntax** — use `/body/tbl[N]/tr[R]/tc[C]` for table cells (not `/body/table[T]/cell[R,C]`)
+officecli paths contain `[]` and prop values may contain `$`. Escaping rules:
+
+1. **Always quote paths:** `"/body/p[1]"` not `/body/p[1]` (shells glob `[N]`)
+2. **Single-quote `$` values:** `--prop text='$50M'` — the whole value in one pair of single quotes
+3. **`\n` and `\t` in `--prop text=`** are interpreted: `\n` → `<w:br/>` (line break), `\t` → `<w:tab/>` (tab). Double them (`\\n`) for literal backslash-n
+4. **Indexing:** `[N]` paths = 1-based, `--index` = 0-based, `[last()]` needs parens (not `[last]`)
+5. **Incremental execution:** run commands one at a time and check each exit code — a failed command in a chain cascades silently
 
 ## Formatting Rules
 
