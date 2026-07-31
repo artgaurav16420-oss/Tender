@@ -16,13 +16,12 @@ venv/
 node_modules/
 
 # Generated output
-*.docx
 *.doc
+*.docx
+!_template.docx
 
 # Auto-generated indices
 .skills-index.json
 
 # Gemini workflow — not relevant for tender generation, kept for history
 karpathy-guidelines.md
-AGENTS.md
-docs/
