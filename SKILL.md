@@ -95,8 +95,9 @@ Miniconda Python with MarkItDown: `pip install 'markitdown[all]'`
 6. Use **officecli** to build the `.docx` from the RRCAT template. Do NOT use pandoc — it does not preserve the required formatting. Instead:
    a. Copy `_template.docx` (a blank RRCAT-formatted template) to the output filename.
    b. Use `officecli` to populate all content (tables, paragraphs, headings, bold text) following the **Formatting Rules** below.
-   c. Close the file: `officecli close [file].docx`
-   d. Verify with: `officecli view [file].docx outline`
+   c. Populate all `{{key}}` placeholders with confirmed values via `officecli merge [output].docx [output].docx --data '[json]'`, or use `officecli set` for cell-level edits if merge is insufficient.
+   d. Close the file: `officecli close [file].docx`
+   e. Verify with: `officecli view [file].docx outline`
 7. Present the `.docx` to the user.
 8. Run **Sync** between installed skill and workspace.
 
@@ -184,9 +185,9 @@ Ask every question in the order below. Each question **must** include a recommen
 
 | # | Question | Recommended Answer |
 |---|---|---|
-| 6.1 | What is the required delivery timeline? | e.g. 8 weeks / 12 weeks / 16 weeks from PO (Recommended: 12 weeks) |
-| 6.2 | What packaging standards apply? *(Skip if: standard commercial packaging acceptable)* | e.g. Marine-grade export packing, weatherproof, shock-proof as per IS:xxxx (Recommended: MIL-STD or IS:xxxx for transit) |
-| 6.3 | What warranty period is required? | 12 months / 24 months / 36 months from final acceptance (Recommended: 12 months) |
+| 7.1 | What is the required delivery timeline? | e.g. 8 weeks / 12 weeks / 16 weeks from PO (Recommended: 12 weeks) |
+| 7.2 | What packaging standards apply? *(Skip if: standard commercial packaging acceptable)* | e.g. Marine-grade export packing, weatherproof, shock-proof as per IS:xxxx (Recommended: MIL-STD or IS:xxxx for transit) |
+| 7.3 | What warranty period is required? | 12 months / 24 months / 36 months from final acceptance (Recommended: 12 months) |
 
 Ask all questions from sections 1-7 before generating. Confirm each answer before moving to the next question.
 
@@ -350,7 +351,7 @@ f) [Any other document specific to equipment, e.g. Solar Yield Simulation Report
 
 ### 7. Vendor Compliance Sheet (Mandatory)
 
-> **Instructions:** Bidders must indicate compliance clearly for every parameter. **"Yes/No/Complied" NOT ALLOWED.** Attach supporting documents for each claim. Bids with incomplete or unsigned sheets may be summarily rejected. Supporting documents shall be attached for each claim as applicable.
+> **Instructions:** Bidders must indicate compliance clearly for every parameter. **'Yes/No/Complied' NOT ALLOWED.** Attach supporting documents for each claim. Bids with incomplete or unsigned sheets may be summarily rejected. Supporting documents shall be attached for each claim as applicable.
 
 Table: **4 columns** — Sr. No. | Parameter | Requirement | Vendor Compliance (use Table Grid style)
 
@@ -618,7 +619,7 @@ The following content MUST be rendered in **bold** in the document:
 
 | Table Type | Columns | Alignment | Notes |
 |:---|:---:|:---|:---|
-| **Scope of Supply** | 3 (Sr.No, Description, Qty) | Sr.No=left, Description=left, Qty=center | Header row with bold labels |
+| **Scope of Supply** | 5 (Item No, Category, Description, Key Specs, Qty) | Item No=left, Category=left, Description=left, Key Specs=left, Qty=center | Header row with bold labels; matches `_template.docx` 5-column layout |
 | **Technical Specs** | 3 (Parameter, Specification, Standard) | Parameter=left, Spec=left, Standard=center | Header row, spacer rows use merged single cell |
 | **Accessories** | 2 (Item, Specification) | Both left | Header row |
 | **Acceptance Criteria** | 3 (System, Test Protocol, Acceptance Criteria) | All left | Multi-line cells in Criteria column |
