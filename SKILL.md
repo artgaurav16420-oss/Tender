@@ -43,6 +43,36 @@ Generate watertight procurement tender specifications for RRCAT, Indore, followi
 
 **The real goal:** Eliminate loopholes that let spurious/unqualified bidders win. Protect public money. Get RRCAT exactly what it needs. Avoid retendering and wasted time.
 
+## Prerequisites
+
+### officecli (required)
+
+This skill depends on `officecli` for .docx generation. **Do NOT use pandoc** — it does not preserve the required formatting.
+
+**Install (if not present):**
+```powershell
+officecli install
+```
+This installs the binary, skills, and MCP for detected agents.
+
+**Update (if outdated):**
+```powershell
+officecli --version          # check current version
+officecli install            # re-run to update
+```
+
+**Verify installation:**
+```powershell
+officecli --version
+officecli help
+```
+
+If `officecli` is not recognized, ensure it is in your PATH or run `officecli install` to set up.
+
+### MarkItDown (for /tender-learn)
+
+Miniconda Python with MarkItDown: `pip install 'markitdown[all]'`
+
 ## Quick Start
 
 1. User requests tender spec for an equipment type.
@@ -367,17 +397,70 @@ officecli close [output].docx
 
 ### OfficeCLI Command Reference
 
+#### File Lifecycle
+
+| Command | Pattern | Notes |
+|---|---|---|
+| **Open** | `officecli open [file].docx` | Start resident process for fast edits |
+| **Save** | `officecli save [file].docx` | Flush changes to disk (resident stays warm) |
+| **Close** | `officecli close [file].docx` | Save + release file (required before external read) |
+
+#### Read & Query
+
+| Content Type | Command Pattern | Notes |
+|---|---|---|
+| **View structure** | `officecli view [file].docx outline` | Heading hierarchy + table structure |
+| **View annotated** | `officecli view [file].docx annotated` | Every paragraph with style + font info |
+| **View text** | `officecli view [file].docx text` | Plain text content only |
+| **Get element** | `officecli get [file].docx /body/p[N]` | Read single paragraph or cell |
+| **Get JSON** | `officecli get [file].docx /body/p[N] --json` | Machine-readable with style/props |
+| **Query find** | `officecli query [file].docx "p:contains('text')"` | Find paragraph containing text |
+| **Query selector** | `officecli query [file].docx "tbl tr tc"` | CSS-like selector for elements |
+
+#### Modify Content
+
 | Content Type | Command Pattern | Notes |
 |---|---|---|
 | **Headings** | `officecli set [file].docx /body/p[N] --style Heading1 --text "text"` | Use `Heading1`, `Heading3` per style table |
 | **Paragraphs** | `officecli set [file].docx /body/p[N] --style "Body Text" --text "text"` | Style names: `FirstParagraph`, `Body Text`, `Compact`, `Block Text`, `Normal` |
-| **Bold text in paragraph** | `officecli set [file].docx /body/p[N] --bold-range START,END --text "full text"` | START/END are character offsets (0-indexed) |
-| **Table cell** | `officecli set [file].docx /body/table[T]/cell[R,C] --text "content"` | T=table index (0-based), R=row, C=col |
-| **Table row (batch)** | `officecli set [file].docx /body/table[T] --add-row --values "val1,val2,val3"` | Adds row with comma-separated values |
-| **Merged header cell** | `officecli set [file].docx /body/table[T]/cell[R,C] --merge-span COLS --text "Header"` | COLS = number of columns to span (e.g., 4) |
-| **Page break before** | `officecli set [file].docx /body/p[N] --page-break-before` | Insert before major sections (3, 5, 7) |
-| **Bold label in cell** | `officecli set [file].docx /body/table[T]/cell[R,C] --bold --text "Label:"` | For signature labels, BQC prefixes |
-| **Verify structure** | `officecli view [file].docx outline` | Shows heading hierarchy and table structure |
+| **Bold text** | `officecli set [file].docx /body/p[N] --bold-range START,END --text "full text"` | START/END are character offsets (0-indexed) |
+| **Font size** | `officecli set [file].docx /body/p[N] --prop size=14` | Size in pt (not half-points) |
+| **Alignment** | `officecli set [file].docx /body/p[N] --prop align="center"` | Values: `left`, `center`, `right`, `justify` |
+| **Page break** | `officecli set [file].docx /body/p[N] --page-break-before` | Insert before major sections (3, 5, 7) |
+
+#### Modify Tables
+
+| Content Type | Command Pattern | Notes |
+|---|---|---|
+| **Table cell** | `officecli set [file].docx /body/tbl[T]/tr[R]/tc[C] --text "content"` | T=table, R=row, C=col (1-based) |
+| **Add row** | `officecli add [file].docx /body/tbl[T] --type row` | Append empty row to table |
+| **Remove cell** | `officecli remove [file].docx /body/tbl[T]/tr[R]/tc[C]` | Delete cell (use for column reduction) |
+| **Merged header** | `officecli set [file].docx /body/tbl[T]/tr[R]/tc[C] --merge-span COLS --text "Header"` | COLS = columns to span (e.g., 4) |
+| **Bold label in cell** | `officecli set [file].docx /body/tbl[T]/tr[R]/tc[C] --bold --text "Label:"` | For signature labels, BQC prefixes |
+| **Column widths** | `officecli set [file].docx /body/tbl[T] --prop colWidths="1257,7174,811"` | Comma-separated dxa values |
+
+#### Add & Remove Elements
+
+| Content Type | Command Pattern | Notes |
+|---|---|---|
+| **Add paragraph** | `officecli add [file].docx /body --type paragraph --props text="...",style="..."` | Insert new paragraph at end of body |
+| **Add after** | `officecli add [file].docx /body/p[N] --type paragraph --props text="..."` | Insert after specific paragraph |
+| **Remove element** | `officecli remove [file].docx /body/p[N]` | Delete paragraph or table |
+
+#### Batch Operations
+
+| Content Type | Command Pattern | Notes |
+|---|---|---|
+| **Batch** | `officecli batch [file].docx --commands '[{"command":"set","path":"/body/p[1]","props":{"text":"Hi"}}]'` | Multiple ops in one pass |
+| **Dump** | `officecli dump [file].docx /body` | Serialize to replayable batch script |
+| **Validate** | `officecli validate [file].docx` | Check OpenXML schema compliance |
+
+#### Tips
+
+- **Quote paths** — most shells expand `[brackets]`: `officecli get doc.docx "/body/p[1]"`
+- **Resident mode** — keep file open with `officecli open` for faster sequential edits
+- **Style not found** — if a style doesn't exist in template, officecli warns but applies reference; define style in template first or use inline formatting
+- **Path syntax** — use `/body/tbl[N]/tr[R]/tc[C]` for table cells (not `/body/table[T]/cell[R,C]`)
 
 ## Formatting Rules
 
