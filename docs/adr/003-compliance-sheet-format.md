@@ -29,7 +29,7 @@ The compliance sheet **must** use the following format for every generated tende
 ### Instruction Text
 - Must appear before the table
 - Bold label: **Instructions:**
-- Body: "Bidders must indicate compliance clearly for every parameter. **"Yes/No/Complied" NOT ALLOWED.** Attach supporting documents for each claim. Bids with incomplete or unsigned sheets may be summarily rejected. Supporting documents shall be attached for each claim as applicable."
+- Body: "Bidders must indicate compliance clearly for every parameter. **'Yes/No/Complied' NOT ALLOWED.** Attach supporting documents for each claim. Bids with incomplete or unsigned sheets may be summarily rejected. Supporting documents shall be attached for each claim as applicable."
 - Style: `Block Text` (Aptos 12pt Bold, Indent Left/Right=480, SpaceBefore/After=5pt)
 
 ### Signature Block

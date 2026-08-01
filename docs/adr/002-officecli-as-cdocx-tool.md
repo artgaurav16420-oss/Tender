@@ -27,4 +27,4 @@ OfficeCLI is the **sole** tool for generating .docx output. All pandoc reference
 - Zero pandoc dependencies
 - Generated .docx files are RRCAT-compliant by construction
 - Template updates (e.g., font changes) only require replacing `_template.docx`
-- Users must have officecli installed (available via npm/npx or as standalone binary)
+- Users must have officecli installed. Install/update/verify commands are documented in the SKILL.md Prerequisites section (`officecli install`, `officecli --version`).
