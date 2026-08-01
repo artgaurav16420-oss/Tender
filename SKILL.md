@@ -1,11 +1,13 @@
 ---
 name: rrcat-tender
 description: Generate RRCAT (Raja Ramanna Centre for Advanced Technology) procurement tender specifications following Indian government open-tendering rules. Use when user asks to create a tender specification, tender document, procurement spec, or mentions RRCAT, Raja Ramanna Centre, or Indore tender for atomic/research equipment.
-version: 1.8
+version: 1.9
 license: MIT
 changelog: |
+  ## 1.9 (2026-08-01)
+  - Set _template.docx page size to A4 (11906 × 16838 twips = 21.0 cm × 29.7 cm); updated Formatting Rules to match
   ## 1.8 (2026-08-01)
-  - Fixed Page Size in Formatting Rules: labeled US Letter (21.59 cm × 27.94 cm), not A4 — matches _template.docx (12240×15840 twips)
+  - Resolved page size discrepancy: template was US Letter (12240×15840 twips); relabeled Formatting Rules to match. Superseded by A4 in v1.9.
   - Refreshed ADR-004 to reflect 31 questions across 7 sections (was 25 across 6)
   - Fixed ADR-005 verification checklist count to 18 items (was 19)
   - Fixed Learned Pattern Library column count in /tender-learn validation (5 → 6, incl. Vulnerability Type)
@@ -536,7 +538,7 @@ These rules are derived from reference RRCAT tenders, including the solar PV and
 
 | Property | Value |
 |:---|:---|
-| Page Size | US Letter (21.59 cm × 27.94 cm) — matches `_template.docx` (12240 × 15840 twips) |
+| Page Size | A4 (21.0 cm × 29.7 cm) — matches `_template.docx` (11906 × 16838 twips) |
 | Margins | Top/Bottom/Left/Right: 2.54 cm |
 | Header/Footer margin | 1.27 cm |
 | Columns | 1 |
