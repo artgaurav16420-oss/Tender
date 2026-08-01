@@ -28,7 +28,7 @@ Every generated tender must embody these four principles. Agents using this skil
 ### 3. Mandatory Clarification Pause
 **Rule:** If any critical variable is missing or vague, STOP and ask. Do not proceed with placeholders.
 **Implementation:**
-- The Mandatory Review Checklist is a hard gate — generation does not start until all 25 questions are confirmed
+- The Mandatory Review Checklist is a hard gate — generation does not start until all 31 questions are confirmed
 - Incomplete answers trigger a 3-strike retry loop:
   - 1st: restate with recommended range + rationale
   - 2nd: offer concrete default: "Shall I proceed with [default]?"
@@ -60,7 +60,7 @@ Before finalizing each generated section, the agent MUST scan for these loophole
 8. **Catalog vs Spec Copy** — "Catalog acceptable" → "Signed spec copy NOT accepted as catalogue; original product catalogue mandatory"
 
 ### Post-Generation Verification Checklist
-The skill includes a 19-item verification checklist that explicitly encodes these anti-loophole checks. Every item must pass before presenting the tender.
+The skill includes an 18-item verification checklist that explicitly encodes these anti-loophole checks. Every item must pass before presenting the tender.
 
 ## Alternatives Considered
 - **Rely on RRCAT evaluators to catch gaps**: Rejected — evaluators review 20+ bids; systematic gaps in the spec itself cannot be caught at evaluation stage.
