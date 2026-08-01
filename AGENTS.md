@@ -1,5 +1,3 @@
-Karpathy Guidelines v3.6 MANDATORY: For all AI operations in this project, you MUST follow karpathy-guidelines.md as the primary behavioral ruleset.
-
 # Tender Skill — Agent Instructions
 
 This is a **document-generation skill** repo, not a codebase. No build, test, lint, or CI commands exist.
@@ -13,7 +11,6 @@ Generate procurement tender specifications for RRCAT (Raja Ramanna Centre for Ad
 - **`SKILL.md`** — canonical skill definition. Read this first.
 - **`docs/adr/`** — architecture decision records.
 - **`Examples/*.md`** — text-extracted tender specs (AI-readable reference).
-- **`Examples/*.pdf`** — original PDFs (human reference for formatting/layout).
 
 ## Installed Skill
 
@@ -37,9 +34,9 @@ Sync after every operation. Direction differs by file type:
 
 1. **Read `SKILL.md`** before generating any document.
 2. **Follow the Mandatory Review Checklist** in `SKILL.md` — do NOT generate until all items confirmed.
-3. Output a Markdown document following the **6-section structure** defined in `SKILL.md`.
+3. Output a Markdown document following the **7-section structure** defined in `SKILL.md`.
 4. Run **Post-Generation Verification** checklist in `SKILL.md` before presenting.
-5. Convert `.md` → `.docx` via pandoc: `pandoc [file].md -o [file].docx`
+5. Build the `.docx` with **officecli** from `_template.docx` (do NOT use pandoc — see ADR-002).
 
 > All behavioral rules, constraints, boilerplate, and templates are in `SKILL.md` — this file is just a quick reference.
 
@@ -55,4 +52,4 @@ Over time, the skill learns from every new tender and improves future generation
 
 ## Example Reference
 
-Both `Examples/*.md` and `Examples/*.pdf` are real RRCAT specs. Use the `.md` files for AI-readable content and `.pdf` for original formatting reference.
+`Examples/*.md` are real RRCAT specs (PDFs are not currently bundled in the repo). Use the `.md` files for AI-readable content during generation.

@@ -1,9 +1,21 @@
 ---
 name: rrcat-tender
 description: Generate RRCAT (Raja Ramanna Centre for Advanced Technology) procurement tender specifications following Indian government open-tendering rules. Use when user asks to create a tender specification, tender document, procurement spec, or mentions RRCAT, Raja Ramanna Centre, or Indore tender for atomic/research equipment.
-version: 1.7
+version: 1.9
 license: MIT
 changelog: |
+  ## 1.9 (2026-08-01)
+  - Set _template.docx page size to A4 (11906 × 16838 twips = 21.0 cm × 29.7 cm); updated Formatting Rules to match
+  ## 1.8 (2026-08-01)
+  - Resolved page size discrepancy: template was US Letter (12240×15840 twips); relabeled Formatting Rules to match. Superseded by A4 in v1.9.
+  - Refreshed ADR-004 to reflect 31 questions across 7 sections (was 25 across 6)
+  - Fixed ADR-005 verification checklist count to 18 items (was 19)
+  - Fixed Learned Pattern Library column count in /tender-learn validation (5 → 6, incl. Vulnerability Type)
+  - Consolidated duplicate Sync procedures into one canonical "Sync (Run After Every Operation)" section
+  - Added grouped confirmation mode to Mandatory Review Checklist (optional batch interview)
+  - Renumbered /tender-learn steps to sequential integers (removed 4.5 / 8.5 / 8.75)
+  - Clarified that Solar_PV_20kWp_Civil.docx and Cold_Storage_Container_40ft.docx are pattern-library references, not bundled example files
+  - Removed stale karpathy-guidelines mandate from AGENTS.md; fixed pandoc reference there (now officecli)
   ## 1.7 (2026-07-31)
   - Fixed OfficeCLI Command Reference: bold via run-level --prop, merged header via hmerge=restart, page break via --prop pageBreakBefore=true
   - Added Help-First Rule: consult officecli help before guessing property names or syntax
@@ -108,7 +120,7 @@ Miniconda Python with MarkItDown: `pip install 'markitdown[all]'`
 - **Mandatory clarification pause** — if any critical variable is missing or vague, STOP and ask.
 - **Generate only when complete** — do not generate until user has confirmed all details.
 - **Compliance sheet mandatory** — Section 7 (Vendor Compliance Sheet (Mandatory)) must be included in EVERY generated tender. Never omit it. Use the **4-column format** (Sr. No. | Parameter | Requirement | Vendor Compliance) with **section header rows** and **sequential numbering** as shown in the Output Template.
-- **One question at a time** — present one checklist item, with a recommended answer range/option. Wait for response before proceeding.
+- **One question at a time** — present one checklist item, with a recommended answer range/option. Wait for response before proceeding. *(Exception: grouped confirmation mode, see Mandatory Review Checklist — batches a section at a time, still requiring explicit accept/override per item.)*
 - **Incomplete answer retry loop** — if user gives a vague / incomplete answer:
   - 1st time → restate the question with the recommended range, explain why the detail matters.
   - 2nd time → offer a concrete default value: "Shall I proceed with [default]? If not, please specify the exact value."
@@ -122,6 +134,21 @@ Miniconda Python with MarkItDown: `pip install 'markitdown[all]'`
 Ask every question in the order below. Each question **must** include a recommended answer (standard value, range, or option). Do not proceed to the next question until the current one is confirmed.
 
 **Conditional branching:** Some questions have a "(Skip if...)" note. If the condition is met, skip to the next unskipped question. This avoids asking irrelevant items.
+
+### Interview Mode
+
+Two modes are supported — default is **one question at a time** (full rigor); use **grouped** mode when the user prefers speed.
+
+| Mode | Behavior | When to use |
+|---|---|---|
+| **One at a time** *(default)* | Ask each question, wait for confirmation before proceeding | New users, complex/critical equipment, uncertain requirements |
+| **Grouped confirmation** | Present all questions in a section as a single batched list (each with its recommended answer). User either accepts all recommended answers at once, or overrides specific items. Confirm per section, not per question. | Experienced users, standard equipment types, repeat tenders |
+
+**Grouped mode rules (must still be enforced):**
+- Each group still includes recommended answers for every item.
+- Every question must be explicitly confirmed or explicitly overridden — no silent skips.
+- Any item the user overrides or leaves open becomes "To Be Confirmed by RRCAT" per the retry-loop rules.
+- After all 7 groups are confirmed, run the same Post-Generation Verification.
 
 ### 1. Basic Tender Metadata
 
@@ -226,7 +253,14 @@ Present the `.docx` to the user.
 
 ## Sync (Run After Every Operation)
 
-Synchronize the installed skill (`~/.agents/skills/rrcat-tender/`) with the workspace (`project root`):
+Synchronize the installed skill (`~/.agents/skills/rrcat-tender/`) with the workspace (`project root`). **Run after every operation** (generation and `/tender-learn`).
+
+Direction differs by file type (per ADR-001):
+
+| Direction | Files |
+|---|---|
+| Installed → Workspace | `SKILL.md` |
+| Workspace → Installed | `Examples/*.md` |
 
 1. **Normalize encoding** — convert all `.md` files to UTF-8 without BOM to prevent tooling issues:
    ```powershell
@@ -237,7 +271,11 @@ Synchronize the installed skill (`~/.agents/skills/rrcat-tender/`) with the work
    ```
 2. Copy `SKILL.md` from installed → workspace (overwrite)
 3. Copy all `Examples/*.md` from workspace → installed (overwrite, since markitdown generates them in workspace)
-4. Confirm: "Synced."
+4. **Verify sync integrity:**
+   - Compare SHA256 hashes of `SKILL.md` (installed vs workspace) and `_template.docx` (installed vs workspace). Report mismatch if found.
+   - Count `Examples/*.md` in both locations; report if counts differ.
+   - Check that `AGENTS.md` exists in installed directory.
+5. Confirm: "Synced — all files verified."
 
 ## Output Template (Fill-in-the-Blanks Skeleton)
 
@@ -494,13 +532,13 @@ officecli paths contain `[]` and prop values may contain `$`. Escaping rules:
 
 ## Formatting Rules
 
-These rules are sourced from the reference documents `Solar_PV_20kWp_Civil.docx` and `Cold_Storage_Container_40ft.docx` and MUST be followed for every generated tender.
+These rules are derived from reference RRCAT tenders, including the solar PV and cold storage specs (`Solar_PV_20kWp_Civil.docx` and `Cold_Storage_Container_40ft.docx` — originals not bundled in `Examples/`; their formatting is captured here) and MUST be followed for every generated tender.
 
 ### Page Layout
 
 | Property | Value |
 |:---|:---|
-| Page Size | A4 (21.59 cm × 27.94 cm) |
+| Page Size | A4 (21.0 cm × 29.7 cm) — matches `_template.docx` (11906 × 16838 twips) |
 | Margins | Top/Bottom/Left/Right: 2.54 cm |
 | Header/Footer margin | 1.27 cm |
 | Columns | 1 |
@@ -696,16 +734,14 @@ When the user requests a tender, use this lookup table to quickly identify the c
 | lens, mirror, optical coating, laser optics | technical_specifications_for_lenses_and_mirrors.md | ⚠️ NEGATIVE EXAMPLE — no BQC section. Acceptance by RRCAT lab testing is de facto gate |
 | cryogenic PPE, safety gears, gloves, face shield | Technical_Specification_for_Cryogenic_Safety_Gears.md | "Yes/No/Complied NOT ALLOWED", LN2 temperature receipt inspection, EN/IS standards |
 | DC fan, axial fan, cooling fan | DC_axial_fans_for_automotive_use.md | exact values required in compliance sheet, make/model mandatory |
-| solar, PV, solar panel, solar module, on-grid, photovoltaic | Solar_PV_20kWp_Civil.docx | ALMM Enlistment Letter mandatory, PVSyst simulation report, 25-yr performance warranty, civil works in scope, rejection warning paragraph |
-| cold storage, container, refrigeration, 40 ft, insulated container | Cold_Storage_Container_40ft.docx | container modification scope explicitly defined, acceptance criteria with rejection warning, OEM or authorized dealers only |
+| solar, PV, solar panel, solar module, on-grid, photovoltaic | Solar PV 20 kWp (see Pattern Library) — source `Solar_PV_20kWp_Civil.docx` not bundled | ALMM Enlistment Letter mandatory, PVSyst simulation report, 25-yr performance warranty, civil works in scope, rejection warning paragraph |
+| cold storage, container, refrigeration, 40 ft, insulated container | Cold Storage 40 ft (see Pattern Library) — source `Cold_Storage_Container_40ft.docx` not bundled | container modification scope explicitly defined, acceptance criteria with rejection warning, OEM or authorized dealers only |
 
 **How to use:** Match the user's equipment description to the keywords column. Read the closest example. Study its defensive clauses (not its table format — that may differ). Ensure equivalent protections appear in your generated tender.
 
 ## Reference Examples
 
-This skill bundles real RRCAT tender specs in `Examples/`. Both formats available:
-- `*.md` — text-extracted Markdown (readable by the agent during generation)
-- `*.pdf` — original PDFs (human reference for formatting/layout)
+This skill bundles real RRCAT tender specs in `Examples/` as text-extracted Markdown (`*.md`). Original PDFs are not currently bundled in the repo — the `.md` files are the authoritative AI-readable reference.
 
 **Purpose of these examples (critical to understand):**
 
@@ -759,7 +795,7 @@ Miniconda Python with MarkItDown: `pip install 'markitdown[all]'`
    markitdown "Examples/[OriginalName].pdf" > "Examples/[OriginalName].md"
    ```
    (Requires Miniconda Python with `pip install markitdown[all]` installed at `~/Miniconda3/python.exe`)
-4.5 **Normalize encoding** — convert all `.md` files to UTF-8 without BOM to prevent tooling issues:
+5. **Normalize encoding** — convert all `.md` files to UTF-8 without BOM to prevent tooling issues:
    ```powershell
    Get-ChildItem Examples/*.md | ForEach-Object {
        $c = [System.IO.File]::ReadAllText($_.FullName)
@@ -767,37 +803,23 @@ Miniconda Python with MarkItDown: `pip install 'markitdown[all]'`
    }
    ```
    (Run from workspace root. Ensures consistency regardless of what markitdown or other tools produce.)
-5. Read the generated `.md` to review quality and fix any extraction issues.
-6. **Analyze** the new example for learned patterns:
+6. Read the generated `.md` to review quality and fix any extraction issues.
+7. **Analyze** the new example for learned patterns:
    - Determine the equipment type / category.
    - Identify BQC phrasing style used.
    - Note the technical table format (column layout).
    - Extract any unique/notable clauses (warranty, EMD, LD, standards).
-7. **Add a new row** to the **Learned Pattern Library** table below with the extracted data.
-8. **Update** the "Examples cover:" line in the **Reference Examples** section — append the new equipment type.
-8.5 **Validate Learned Pattern Library row** — Re-read the Learned Pattern Library table. Verify the new row has all 5 columns populated (Example name, equipment type, BQC strategy, anti-loophole clauses, defensive mechanisms). If any column is empty, fill it with "TBD — requires analysis" before proceeding.
-8.75 **Validate Examples count** — Count the rows in the Reference Examples "Examples cover" line and verify it matches the actual number of `.md` files in `Examples/`. If mismatch, update the count.
-9. **Confirm**:
+8. **Add a new row** to the **Learned Pattern Library** table below with the extracted data.
+9. **Update** the "Examples cover:" line in the **Reference Examples** section — append the new equipment type.
+10. **Validate Learned Pattern Library row** — Re-read the Learned Pattern Library table. Verify the new row has all 6 columns populated (Example name, equipment type, vulnerability type, BQC strategy, anti-loophole clauses, defensive mechanisms). If any column is empty, fill it with "TBD — requires analysis" before proceeding.
+11. **Validate Examples count** — Count the rows in the Reference Examples "Examples cover" line and verify it matches the actual number of `.md` files in `Examples/`. If mismatch, update the count.
+12. **Confirm**:
    > "Learned from `[Name].md`. Pattern Library and Reference Examples updated."
-10. **Repeat** — ask if user wants to process the next unmatched PDF.
+13. **Repeat** — ask if user wants to process the next unmatched PDF.
 
 ### Sync between workspace and installed skill
 
-The skill is installed at `~/.agents/skills/rrcat-tender/` and the workspace is at the project root. **Sync after every operation** (generation and /tender-learn):
-
-| Direction | Files |
-|---|---|
-| Installed → Workspace | `SKILL.md` |
-| Workspace → Installed | `Examples/*.md` |
-
-**Sync procedure (run after every operation):**
-1. Copy `SKILL.md` from installed → workspace (overwrite workspace copy)
-2. Copy all `Examples/*.md` from workspace → installed (overwrite, since markitdown generates them in workspace)
-3. **Verify sync integrity:**
-   - Compare SHA256 hashes of `SKILL.md` (installed vs workspace) and `_template.docx` (installed vs workspace). Report mismatch if found.
-   - Count `Examples/*.md` in both locations; report if counts differ.
-   - Check that `AGENTS.md` exists in installed directory.
-4. Confirm: "Synced — all files verified."
+Follow the **canonical Sync procedure** in the "[Sync (Run After Every Operation)](#sync-run-after-every-operation)" section above. It runs after `/tender-learn` just as it does after generation.
 
 ## Learned Pattern Library (anti-loophole patterns learned from examples)
 
