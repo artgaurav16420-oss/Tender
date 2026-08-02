@@ -38,6 +38,7 @@ Every generated tender must embody these four principles. Agents using this skil
 ### 4. Defensive Specification Writing
 **Rule:** Every clause must make it harder for unqualified bidders to fake compliance. If a requirement can be bypassed with 'Yes/No/Complied' without evidence, rewrite it to demand verifiable proof.
 **Implementation Patterns:**
+
 | Weak Clause | Defensive Rewrite | Evidence Demanded |
 |---|---|---|
 | "Bidder must have ISO 9001" | "Bidder must submit valid ISO 9001 certificate (certificate number verifiable on accreditation body website)" | Certificate copy + accreditation body verification |
@@ -53,11 +54,11 @@ Before finalizing each generated section, the agent MUST scan for these loophole
 2. **Unverifiable Claims** — "Bidder shall have..." without "Submit proof of..." → add evidence demand
 3. **Ambiguous Standards** — "As per relevant standards" → cite exact standard (IS/ISO/ASME + year)
 4. **Open-Ended Documentation** — "Documents to be enclosed" → list exact documents (GA drawing, datasheet, OEM auth, test cert)
-5. **Missing Rejection Language** — No consequence for non-compliance → add "Bids with incomplete/unsigned sheets may be summarily rejected"
-6. **Export Restriction** — No clause preventing equipment export for servicing → add "Export of equipment out of India for servicing not acceptable"
-7. **Right to Audit** — No plant visit right → add "RRCAT reserves right to physically visit OEM plant and reject bid in case of incompetency"
-8. **Traceable Part Numbers** — No requirement for OEM website verifiable make/model → add "Make & model number must be verifiable from manufacturer's website"
-9. **Catalog vs Spec Copy** — "Catalog acceptable" → "Signed spec copy NOT accepted as catalogue; original product catalogue mandatory"
+5. **Missing Rejection Language** — No consequence for non-compliance → add "Bids with incomplete/unsigned sheets may be summarily rejected" (if applicable)
+6. **Export Restriction** — No clause preventing equipment export for servicing → add "Export of equipment out of India for servicing not acceptable" (if applicable to serviceable equipment)
+7. **Right to Audit** — No plant visit right → add "RRCAT reserves right to physically visit OEM plant and reject bid in case of incompetency" (if applicable for plant inspection)
+8. **Traceable Part Numbers** — No requirement for OEM website verifiable make/model → add "Make & model number must be verifiable from manufacturer's website" (if applicable for traceable equipment)
+9. **Catalog vs Spec Copy** — "Catalog acceptable" → "Signed spec copy NOT accepted as catalogue; original product catalogue mandatory" (if applicable for catalogue-based goods)
 
 ### Post-Generation Verification Checklist
 The skill includes an 18-item verification checklist that explicitly encodes these anti-loophole checks. Every item must pass before presenting the tender.
