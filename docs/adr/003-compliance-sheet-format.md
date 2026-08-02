@@ -4,7 +4,7 @@
 Accepted (2026-07-31)
 
 ## Context
-The Vendor Compliance Sheet (Section 7 of every tender) is the primary anti-loophole mechanism. It forces bidders to provide verifiable evidence for every requirement rather than vague "Yes/No/Complied" responses. The format must be unambiguous, auditable, and enforceable.
+The Vendor Compliance Sheet (Section 7 of every tender) is the primary anti-loophole mechanism. It forces bidders to provide verifiable evidence for every requirement rather than vague 'Yes/No/Complied' responses. The format must be unambiguous, auditable, and enforceable.
 
 RRCAT's historical tenders showed inconsistent compliance sheet designs: some had no compliance sheet at all (negative examples: Flexible VJ Hose, Self-Pressurized LN2 Container, Water Chiller draft), some had inconsistent numbering, some used 3-column instead of 4-column layouts, and some allowed "Complied" as a valid response.
 
@@ -46,7 +46,7 @@ The compliance sheet **must** use the following format for every generated tende
 
 ## Alternatives Considered
 - **3-column (Parameter, Requirement, Compliance)**: Rejected — Sr. No. is essential for cross-referencing and audit trails.
-- **Allow "Yes/No/Complied" with evidence**: Rejected — "Complied" is a checkbox, not evidence. The phrase itself signals a loophole; explicit rejection forces narrative responses with document references.
+- **Allow 'Yes/No/Complied' with evidence**: Rejected — "Complied" is a checkbox, not evidence. The phrase itself signals a loophole; explicit rejection forces narrative responses with document references.
 - **Optional compliance sheet for simple items**: Rejected — even simple items need traceable evidence (make/model, certifications, test reports). Omission creates a gap spurious bidders exploit.
 
 ## Consequences
