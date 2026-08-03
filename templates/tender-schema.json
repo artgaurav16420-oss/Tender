@@ -1,0 +1,191 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/artgaurav16420-oss/Tender/templates/tender-schema.json",
+  "title": "RRCAT Tender Specification Document",
+  "description": "Machine-readable capture of a generated RRCAT tender. Mirrors the 7-section Output Template in SKILL.md plus the interview audit trail.",
+  "type": "object",
+  "required": [
+    "metadata",
+    "scope",
+    "bqc",
+    "technical",
+    "evaluation",
+    "acceptance",
+    "delivery",
+    "compliance"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "required": ["item", "quantity", "application", "ref", "date"],
+      "additionalProperties": false,
+      "properties": {
+        "item": { "type": "string", "minLength": 3 },
+        "quantity": { "type": "string", "minLength": 1 },
+        "application": { "type": "string", "minLength": 3 },
+        "ref": { "type": "string", "pattern": "^RRCAT/[0-9]{4}/PUR/[0-9]{3}$" },
+        "date": { "type": "string", "pattern": "^[0-9]{2}/[0-9]{2}/[0-9]{4}$" }
+      }
+    },
+    "scope": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["item_no", "category", "description", "key_spec", "qty"],
+        "additionalProperties": false,
+        "properties": {
+          "item_no": { "type": "integer", "minimum": 1 },
+          "category": { "type": "string", "enum": ["Main Equipment", "Accessories", "Mandatory Spares", "Documentation"] },
+          "description": { "type": "string", "minLength": 3 },
+          "key_spec": { "type": "string" },
+          "qty": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "bqc": {
+      "type": "object",
+      "required": ["years_experience", "similar_installations", "certifications", "oem_auth", "govt_past_performance"],
+      "additionalProperties": false,
+      "properties": {
+        "years_experience": { "type": "string", "minLength": 1 },
+        "similar_installations": { "type": "string", "minLength": 1 },
+        "certifications": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "oem_auth": { "type": "boolean" },
+        "govt_past_performance": { "type": "boolean" },
+        "regulatory": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "technical": {
+      "type": "object",
+      "required": ["main"],
+      "additionalProperties": false,
+      "properties": {
+        "main": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["param", "spec", "standard"],
+            "additionalProperties": false,
+            "properties": {
+              "param": { "type": "string", "minLength": 2 },
+              "spec": { "type": "string", "minLength": 1 },
+              "standard": { "type": "string" }
+            }
+          }
+        },
+        "accessories": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["item", "spec", "standard"],
+            "additionalProperties": false,
+            "properties": {
+              "item": { "type": "string", "minLength": 2 },
+              "spec": { "type": "string", "minLength": 1 },
+              "standard": { "type": "string" }
+            }
+          }
+        },
+        "safety": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["feature", "requirement"],
+            "additionalProperties": false,
+            "properties": {
+              "feature": { "type": "string", "minLength": 2 },
+              "requirement": { "type": "string", "minLength": 2 }
+            }
+          }
+        }
+      }
+    },
+    "evaluation": {
+      "type": "object",
+      "required": ["documents", "weightage"],
+      "additionalProperties": false,
+      "properties": {
+        "documents": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "weightage": { "type": "string", "minLength": 1 },
+        "disqualification": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "acceptance": {
+      "type": "object",
+      "required": ["rejection_warning", "tests"],
+      "additionalProperties": false,
+      "properties": {
+        "rejection_warning": { "type": "boolean" },
+        "tests": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["system", "protocol", "criteria"],
+            "additionalProperties": false,
+            "properties": {
+              "system": { "type": "string", "minLength": 2 },
+              "protocol": { "type": "string", "minLength": 2 },
+              "criteria": { "type": "string", "minLength": 2 }
+            }
+          }
+        }
+      }
+    },
+    "delivery": {
+      "type": "object",
+      "required": ["timeline_weeks", "packaging", "warranty_months"],
+      "additionalProperties": false,
+      "properties": {
+        "timeline_weeks": { "type": "integer", "minimum": 1 },
+        "packaging": { "type": "string", "minLength": 3 },
+        "warranty_months": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "compliance": {
+      "type": "object",
+      "required": ["rows"],
+      "additionalProperties": false,
+      "properties": {
+        "instructions": { "type": "boolean" },
+        "rows": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "oneOf": [
+              {
+                "required": ["group"],
+                "additionalProperties": false,
+                "properties": { "group": { "type": "string", "minLength": 2 } }
+              },
+              {
+                "required": ["param", "requirement"],
+                "additionalProperties": false,
+                "properties": {
+                  "param": { "type": "string", "minLength": 2 },
+                  "requirement": { "type": "string", "minLength": 2 }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "checklist_answers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["question", "answer"],
+        "additionalProperties": false,
+        "properties": {
+          "question": { "type": "string" },
+          "answer": { "type": "string" }
+        }
+      }
+    }
+  }
+}

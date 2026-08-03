@@ -21,14 +21,15 @@ The skill is installed at `~/.agents/skills/rrcat-tender/`. Any OpenCode session
 Sync after every operation. Direction differs by file type:
 
 - `SKILL.md` → **installed → workspace** (skill definition authored at installed location)
-- `Examples/*.md` → **workspace → installed** (markitdown generates `.md` in workspace; reverse would overwrite new conversions)
-- **UTF-8 normalization** required before sync to prevent encoding issues:
-  ```powershell
-  Get-ChildItem Examples/*.md | ForEach-Object {
-      $c = [System.IO.File]::ReadAllText($_.FullName)
-      [System.IO.File]::WriteAllText($_.FullName, $c, [System.Text.UTF8Encoding]::new($false))
-  }
-  ```
+- `Examples/*.md`, `AGENTS.md`, `_template.docx` → **workspace → installed**
+- **UTF-8 normalization** (no BOM) is applied automatically by the sync script.
+
+Run the sync script from the repo root:
+
+- Linux / macOS / Git-Bash: `bash scripts/sync.sh` (first run: `bash scripts/sync.sh --install`)
+- Windows PowerShell: `powershell -ExecutionPolicy Bypass -File scripts/sync.ps1`
+
+It mirrors `Examples/` into the installed dir (removing stale copies), verifies SHA256 of `SKILL.md` and `_template.docx`, `Examples/*.md` counts, and `AGENTS.md` presence, and prints "Synced — all files verified." on success.
 
 ## Core Workflow
 
