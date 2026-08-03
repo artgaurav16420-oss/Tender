@@ -4,7 +4,8 @@
 #   SKILL.md                                          installed -> workspace
 #   Examples/*.md, AGENTS.md, _template.docx          workspace -> installed
 #
-# Also normalizes all Examples/*.md to UTF-8 without BOM and verifies
+# Also normalizes all Examples/*.md to UTF-8 without BOM, mirrors Examples/
+# to the installed dir (removing stale installed copies), and verifies
 # integrity (SHA256 of SKILL.md + _template.docx, Examples counts,
 # AGENTS.md presence).
 #
@@ -65,9 +66,16 @@ Say "SKILL.md: installed -> workspace"
 New-Item -ItemType Directory -Path (Join-Path $InstallDir "Examples") -Force | Out-Null
 $files = Get-ChildItem "$Workspace\Examples\*.md"
 $files | ForEach-Object { Copy-Item $_.FullName (Join-Path $InstallDir "Examples") -Force }
+# Mirror: remove installed examples that were deleted/renamed in the workspace
+Get-ChildItem "$InstallDir\Examples\*.md" | ForEach-Object {
+    if (-not (Test-Path (Join-Path $Workspace "Examples\$($_.Name)"))) {
+        Remove-Item $_.FullName -Force
+        Say "removed stale installed example: $($_.Name)"
+    }
+}
 Copy-Item "$Workspace\AGENTS.md" $InstallDir -Force
 Copy-Item "$Workspace\_template.docx" $InstallDir -Force
-Say "Examples\*.md ($($files.Count) files), AGENTS.md, _template.docx: workspace -> installed"
+Say "Examples\*.md ($($files.Count) files), AGENTS.md, _template.docx: workspace -> installed (mirrored)"
 
 # 4. Verify integrity
 $failed = $false

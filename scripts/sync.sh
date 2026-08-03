@@ -5,7 +5,8 @@
 #   SKILL.md                                          installed -> workspace
 #   Examples/*.md, AGENTS.md, _template.docx          workspace -> installed
 #
-# Also normalizes all Examples/*.md to UTF-8 without BOM and verifies
+# Also normalizes all Examples/*.md to UTF-8 without BOM, mirrors Examples/
+# to the installed dir (removing stale installed copies), and verifies
 # integrity (SHA256 of SKILL.md + _template.docx, Examples counts,
 # AGENTS.md presence).
 #
@@ -81,9 +82,18 @@ for f in "$WORKSPACE"/Examples/*.md; do
   cp "$f" "$INSTALL/Examples/"
   count=$((count+1))
 done
+# Mirror: remove installed examples that were deleted/renamed in the workspace
+for f in "$INSTALL"/Examples/*.md; do
+  [ -f "$f" ] || continue
+  b="${f##*/}"
+  if [ ! -f "$WORKSPACE/Examples/$b" ]; then
+    rm -f "$f"
+    say "removed stale installed example: $b"
+  fi
+done
 cp "$WORKSPACE/AGENTS.md" "$INSTALL/AGENTS.md"
 cp "$WORKSPACE/_template.docx" "$INSTALL/_template.docx"
-say "Examples/*.md ($count files), AGENTS.md, _template.docx: workspace -> installed"
+say "Examples/*.md ($count files), AGENTS.md, _template.docx: workspace -> installed (mirrored)"
 
 # 4. Verify integrity
 FAILED=0

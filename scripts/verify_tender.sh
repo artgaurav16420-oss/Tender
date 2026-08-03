@@ -3,7 +3,8 @@
 # items of the Post-Generation Verification checklist in SKILL.md.
 #
 # Usage:  bash scripts/verify_tender.sh <tender.md>
-# Exit codes: 0 = PASS, 1 = FAIL (must fix), 2 = PASS with warnings
+# Exit codes: 0 = PASS (warnings, if any, are printed — review them),
+#             1 = FAIL (must fix)
 #
 # Optional: BRAND_LIST=/path/to/list to override the brand wordlist.
 set -u
@@ -28,7 +29,7 @@ if grep -Eq 'TBD|To Be Confirmed by RRCAT' "$FILE"; then
   warn "'TBD' / 'To Be Confirmed by RRCAT' present (allowed only as documented fallback)"
 fi
 
-# 3. Seven sections present and in order
+# 3. Seven sections present, each exactly once, and in order
 found=0
 prev=-1
 while IFS=: read -r ln rest; do
@@ -37,6 +38,12 @@ while IFS=: read -r ln rest; do
   prev=$ln
 done < <(grep -nE '^### (1\. Scope of Supply|2\. Bidder Qualification Criteria|3\. Technical Requirements|4\. Bid Evaluation Criteria|5\. Acceptance Criteria:?|6\. Delivery Terms:?|7\. Vendor Compliance Sheet)' "$FILE")
 if [ "$found" -ne 7 ]; then fail "expected exactly 7 section headings, found $found"; fi
+# Each of the seven distinct section names must occur exactly once
+names=$(grep -oE '^### (1\. Scope of Supply|2\. Bidder Qualification Criteria|3\. Technical Requirements|4\. Bid Evaluation Criteria|5\. Acceptance Criteria:?|6\. Delivery Terms:?|7\. Vendor Compliance Sheet)' "$FILE" | sed -E 's/^### //; s/:$//')
+for s in "1. Scope of Supply" "2. Bidder Qualification Criteria" "3. Technical Requirements" "4. Bid Evaluation Criteria" "5. Acceptance Criteria" "6. Delivery Terms" "7. Vendor Compliance Sheet"; do
+  c=$(printf '%s\n' "$names" | grep -cxF "$s")
+  if [ "$c" -ne 1 ]; then fail "section '$s' occurs $c time(s), expected exactly once"; fi
+done
 
 # 4. Compliance sheet requirements
 grep -q "Instructions:" "$FILE" || fail "compliance sheet missing 'Instructions:'"
@@ -84,6 +91,6 @@ fi
 
 echo "---"
 if [ "$FAILS" -gt 0 ]; then echo "RESULT: FAIL ($FAILS fail, $WARNS warn)"; exit 1; fi
-if [ "$WARNS" -gt 0 ]; then echo "RESULT: PASS with warnings ($WARNS)"; exit 2; fi
+if [ "$WARNS" -gt 0 ]; then echo "RESULT: PASS with warnings ($WARNS) — review warnings before presenting"; exit 0; fi
 echo "RESULT: PASS"
 exit 0

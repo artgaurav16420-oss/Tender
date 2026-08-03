@@ -29,7 +29,7 @@ Run the sync script from the repo root:
 - Linux / macOS / Git-Bash: `bash scripts/sync.sh` (first run: `bash scripts/sync.sh --install`)
 - Windows PowerShell: `powershell -ExecutionPolicy Bypass -File scripts/sync.ps1`
 
-It verifies SHA256 of `SKILL.md` and `_template.docx`, `Examples/*.md` counts, and `AGENTS.md` presence, and prints "Synced — all files verified." on success.
+It mirrors `Examples/` into the installed dir (removing stale copies), verifies SHA256 of `SKILL.md` and `_template.docx`, `Examples/*.md` counts, and `AGENTS.md` presence, and prints "Synced — all files verified." on success.
 
 ## Core Workflow
 

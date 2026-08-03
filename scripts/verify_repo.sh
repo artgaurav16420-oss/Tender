@@ -33,9 +33,9 @@ done
 [ "$missing" = 0 ] && ok "all $(ls Examples/*.md 2>/dev/null | wc -l) examples referenced"
 
 # 4. Learned Pattern Library rows have 6 columns (>= 7 pipes, contains .md)
-awk '/^## Learned Pattern Library/{f=1} f && /^\| / && /\.md/{n=gsub(/\|/, "&"); if (n < 7) print NR ": " $0}' SKILL.md > /tmp/pl_bad.txt
+awk '/^## Learned Pattern Library/{f=1} f && /^\| / && /\.md/{n=gsub(/\|/, "&"); if (n != 7) print NR ": " $0}' SKILL.md > /tmp/pl_bad.txt
 if [ -s /tmp/pl_bad.txt ]; then
-  fail "pattern library rows with <6 columns:"; cat /tmp/pl_bad.txt
+  fail "pattern library rows must have exactly 6 columns:"; cat /tmp/pl_bad.txt
 else
   ok "pattern library 6-column rows"
 fi

@@ -131,7 +131,7 @@ For repeatable, machine-verified tenders, use the structured pipeline instead of
 2. Write the confirmed answers as `templates/tender.json` (see `templates/tender-schema.json` and the worked `templates/tender.example.json`).
 3. Validate: `python3 scripts/validate_tender_json.py templates/tender.json`
 4. Render: `python3 scripts/render_tender.py templates/tender.json -o out/` → produces `out/<slug>.md` (full 7-section Markdown), an `officecli merge` data payload, and build notes.
-5. Gate: `bash scripts/verify_tender.sh out/<slug>.md` must exit 0 before presenting.
+5. Gate: `bash scripts/verify_tender.sh out/<slug>.md` must exit 0 before presenting (review any warnings it prints).
 6. Build the `.docx` from `_template.docx` per the officecli workflow in step 6 above, using the rendered Markdown as the authoritative content (or `officecli merge` with the emitted data payload if the template uses `{{key}}` placeholders).
 
 The JSON file doubles as an audit trail of the confirmed checklist answers (`checklist_answers`). Structured mode only changes the output step — it does NOT replace the Mandatory Review Checklist interview.
@@ -275,7 +275,7 @@ After generating the tender document, verify ALL of these:
 
 If any check fails, fix before presenting.
 
-**Automated checks:** Run `bash scripts/verify_tender.sh [output].md`. It FAILS on leftover placeholders, missing/out-of-order sections, compliance-sheet gaps, Sr. No. sequence errors, and tender-ref format; it WARNS on brand names (vendor neutrality) and non-SI units. Exit 0 = pass, 1 = fail (fix before presenting), 2 = warnings (review). For repo-wide integrity use `bash scripts/verify_repo.sh` (also run in CI).
+**Automated checks:** Run `bash scripts/verify_tender.sh [output].md`. It FAILS on leftover placeholders, missing/duplicated/out-of-order sections, compliance-sheet gaps, Sr. No. sequence errors, and tender-ref format; it WARNS on brand names (vendor neutrality) and non-SI units. Exit 0 = pass (warnings, if any, are printed — review them before presenting), 1 = fail (fix before presenting). For repo-wide integrity use `bash scripts/verify_repo.sh` (also run in CI).
 
 **7. Validate + visual check:** After all checks pass, run structural validation and optional visual verification:
 ```

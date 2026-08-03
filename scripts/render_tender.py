@@ -48,6 +48,18 @@ def slugify(text):
     return slug or "tender"
 
 
+def md_cell(value):
+    """Escape a value for use as a Markdown table cell.
+
+    An unescaped pipe would add columns and a newline would add rows,
+    breaking the table — and in particular the four-column Vendor
+    Compliance Sheet that verification depends on.
+    """
+    text = str(value) if value is not None else ""
+    text = text.replace("\r\n", " ").replace("\r", " ").replace("\n", " ")
+    return text.replace("|", "\\|")
+
+
 def md_table(header, rows, aligns=None):
     """Render a Markdown table. rows = list of lists of str."""
     aligns = aligns or []
@@ -58,7 +70,7 @@ def md_table(header, rows, aligns=None):
         sep.append({"left": ":---", "center": ":---:", "right": "---:"}[a])
     lines.append("| " + " | ".join(sep) + " |")
     for row in rows:
-        cells = [(str(c) if c is not None else "") for c in row]
+        cells = [md_cell(c) for c in row]
         lines.append("| " + " | ".join(cells) + " |")
     return "\n".join(lines)
 
