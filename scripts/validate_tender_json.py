@@ -29,7 +29,7 @@ def validate(doc, path_label):
         return [f"{path_label}: top level must be an object"]
 
     required = ["metadata", "scope", "bqc", "technical", "evaluation",
-                "acceptance", "delivery", "commercial", "compliance"]
+                "acceptance", "delivery", "compliance"]
     # Extract every section defensively: a missing or mistyped section must
     # produce collected diagnostics, never a KeyError/AttributeError traceback.
     m = doc.get("metadata")
@@ -60,10 +60,6 @@ def validate(doc, path_label):
     if not isinstance(deliv, dict):
         check(isinstance(deliv, dict), f"{path_label}: delivery must be an object", errors)
         deliv = {}
-    comm = doc.get("commercial")
-    if not isinstance(comm, dict):
-        check(isinstance(comm, dict), f"{path_label}: commercial must be an object", errors)
-        comm = {}
     comp = doc.get("compliance")
     if not isinstance(comp, dict):
         check(isinstance(comp, dict), f"{path_label}: compliance must be an object", errors)
@@ -152,11 +148,6 @@ def validate(doc, path_label):
     check(deliv.get("packaging"), f"{path_label}: delivery.packaging required", errors)
     check(isinstance(deliv.get("warranty_months"), int) and deliv.get("warranty_months", 0) >= 1,
           f"{path_label}: delivery.warranty_months must be a positive integer", errors)
-
-    for key in ("emd", "pbg_percent", "ld_rate_percent", "ld_cap_percent", "payment_terms"):
-        check(comm.get(key), f"{path_label}: commercial.{key} required", errors)
-    check(isinstance(comm.get("bid_validity_days"), int) and comm.get("bid_validity_days", 0) >= 30,
-          f"{path_label}: commercial.bid_validity_days must be >= 30", errors)
 
     rows = comp.get("rows")
     check(isinstance(rows, list) and rows,

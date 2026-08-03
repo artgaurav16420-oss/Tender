@@ -176,12 +176,9 @@ def render(doc):
     lines.append("---")
     lines.append("")
 
-    # 6. Delivery Terms (6.1) + Financial & Commercial Terms (6.2)
+    # 6. Delivery Terms
     deliv = doc["delivery"]
-    comm = doc.get("commercial") or {}
     lines.append("### 6. Delivery Terms")
-    lines.append("")
-    lines.append("**6.1 Delivery Terms**")
     lines.append("")
     deliv_rows = [
         ["Delivery Timeline", f"{deliv['timeline_weeks']} weeks from Purchase Order date"],
@@ -189,24 +186,6 @@ def render(doc):
         ["Warranty", f"{deliv['warranty_months']} months from final acceptance against design defects, material flaws, and workmanship for complete assembly and all supplied hardware/software"],
     ]
     lines.append(md_table(["Term", "Detail"], deliv_rows))
-    if comm:
-        lines.append("")
-        lines.append("**6.2 Financial & Commercial Terms**")
-        lines.append("")
-        comm_rows = []
-        if comm.get("emd"):
-            comm_rows.append(["Earnest Money Deposit (EMD)", comm["emd"]])
-        if comm.get("pbg_percent"):
-            comm_rows.append(["Performance Bank Guarantee (PBG)", f"{comm['pbg_percent']}% of contract value, valid until warranty expiry + 60 days"])
-        if comm.get("bid_validity_days"):
-            comm_rows.append(["Bid Validity", f"{comm['bid_validity_days']} days from bid opening"])
-        if comm.get("ld_rate_percent"):
-            comm_rows.append(["Liquidated Damages", f"{comm['ld_rate_percent']}% of the value of the delayed portion per week of delay, subject to a maximum of {comm.get('ld_cap_percent', '')}% of contract value"])
-        if comm.get("payment_terms"):
-            comm_rows.append(["Payment Terms", comm["payment_terms"] + (" (GST extra as applicable)" if "GST" not in comm["payment_terms"] else "")])
-        if comm.get("arbitration"):
-            comm_rows.append(["Arbitration", comm["arbitration"]])
-        lines.append(md_table(["Term", "Detail"], comm_rows))
     lines.append("")
     lines.append("---")
     lines.append("")
@@ -237,7 +216,6 @@ def officecli_data(doc):
     """Flat {{key}} -> value map for officecli merge."""
     m = doc["metadata"]
     deliv = doc["delivery"]
-    comm = doc.get("commercial") or {}
     data = {
         "tender_ref": m["ref"],
         "date": m["date"],
@@ -248,10 +226,6 @@ def officecli_data(doc):
         "packaging": deliv["packaging"],
         "warranty_months": str(deliv["warranty_months"]),
     }
-    for key in ("emd", "pbg_percent", "bid_validity_days", "ld_rate_percent",
-                "ld_cap_percent", "payment_terms", "arbitration"):
-        if comm.get(key):
-            data[key] = str(comm[key])
     return data
 
 

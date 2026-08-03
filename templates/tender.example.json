@@ -90,15 +90,6 @@
     "packaging": "Standard commercial packaging suitable for road transit",
     "warranty_months": 12
   },
-  "commercial": {
-    "emd": "₹50,000 (or as per tender policy)",
-    "pbg_percent": "5",
-    "bid_validity_days": 90,
-    "ld_rate_percent": "0.5",
-    "ld_cap_percent": "10",
-    "payment_terms": "Payment on delivery and successful acceptance at RRCAT; GST extra as applicable",
-    "arbitration": "Disputes settled by arbitration under the Arbitration and Conciliation Act, 1996; seat and venue: Indore"
-  },
   "compliance": {
     "instructions": true,
     "rows": [
@@ -110,21 +101,13 @@
       { "param": "Flow Rate", "requirement": "≥75 LPM (SS 304 pump) — technical datasheet" },
       { "param": "Pump Head Pressure", "requirement": "≥5 bar — technical datasheet" },
       { "param": "Electrical Supply", "requirement": "415V ±10%, 3-phase, 50 Hz — technical datasheet" },
-      { "group": "Delivery & Commercial Terms" },
+      { "group": "Delivery Terms" },
       { "param": "Delivery Timeline", "requirement": "12 weeks from PO" },
-      { "param": "Warranty", "requirement": "12 months from final acceptance" },
-      { "param": "EMD", "requirement": "EMD furnished with bid; forfeiture conditions as per tender" },
-      { "param": "PBG", "requirement": "5% of contract value; valid through warranty + 60 days" },
-      { "param": "Liquidated Damages", "requirement": "0.5% per week, cap 10% of contract value" }
+      { "param": "Warranty", "requirement": "12 months from final acceptance" }
     ]
   },
   "checklist_answers": [
     { "question": "1.1 Item description and quantity", "answer": "Re-circulating Chiller, 20 kW; 1 No" },
-    { "question": "1.2 Intended application", "answer": "Laser cooling at RRCAT" },
-    { "question": "7.4 EMD", "answer": "₹50,000 (or as per tender policy)" },
-    { "question": "7.5 PBG", "answer": "5% of contract value, valid through warranty + 60 days" },
-    { "question": "7.6 Bid validity", "answer": "90 days" },
-    { "question": "7.7 Liquidated damages", "answer": "0.5% per week, cap 10%" },
-    { "question": "7.8 Payment terms", "answer": "Payment on delivery and acceptance; GST extra" }
+    { "question": "1.2 Intended application", "answer": "Laser cooling at RRCAT" }
   ]
 }

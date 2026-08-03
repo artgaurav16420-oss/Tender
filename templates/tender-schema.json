@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/artgaurav16420-oss/Tender/templates/tender-schema.json",
   "title": "RRCAT Tender Specification Document",
-  "description": "Machine-readable capture of a generated RRCAT tender. Mirrors the 7-section Output Template in SKILL.md plus the commercial-terms block (ADR-006) and the interview audit trail.",
+  "description": "Machine-readable capture of a generated RRCAT tender. Mirrors the 7-section Output Template in SKILL.md plus the interview audit trail.",
   "type": "object",
   "required": [
     "metadata",
@@ -12,7 +12,6 @@
     "evaluation",
     "acceptance",
     "delivery",
-    "commercial",
     "compliance"
   ],
   "additionalProperties": false,
@@ -144,20 +143,6 @@
         "timeline_weeks": { "type": "integer", "minimum": 1 },
         "packaging": { "type": "string", "minLength": 3 },
         "warranty_months": { "type": "integer", "minimum": 1 }
-      }
-    },
-    "commercial": {
-      "type": "object",
-      "required": ["emd", "pbg_percent", "bid_validity_days", "ld_rate_percent", "ld_cap_percent", "payment_terms"],
-      "additionalProperties": false,
-      "properties": {
-        "emd": { "type": "string", "minLength": 3 },
-        "pbg_percent": { "type": "string", "minLength": 1 },
-        "bid_validity_days": { "type": "integer", "minimum": 30 },
-        "ld_rate_percent": { "type": "string", "minLength": 1 },
-        "ld_cap_percent": { "type": "string", "minLength": 1 },
-        "payment_terms": { "type": "string", "minLength": 5 },
-        "arbitration": { "type": "string" }
       }
     },
     "compliance": {

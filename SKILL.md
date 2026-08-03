@@ -9,7 +9,6 @@ changelog: |
   - Added automated verification `scripts/verify_tender.sh` (generated tenders) and `scripts/verify_repo.sh` (repo integrity)
   - Added GitHub Actions CI (`.github/workflows/ci.yml`) and `.markdownlint-cli2.yaml`
   - Added structured generation: `templates/tender-schema.json`, `templates/tender.example.json`, `scripts/validate_tender_json.py`, `scripts/render_tender.py`
-  - Added commercial clauses (EMD, PBG, bid validity, liquidated damages, payment terms, arbitration): checklist Qs 7.4-7.8 and Section 6.2 Financial & Commercial Terms block (ADR-006)
   - Added `docs/standards-glossary.md`, `CONTRIBUTING.md`, `CHANGELOG.md`, `LICENSE`
   - Generalised the MarkItDown prerequisite path (no longer Windows-only)
   ## 1.9 (2026-08-01)
@@ -240,13 +239,6 @@ Two modes are supported — default is **one question at a time** (full rigor); 
 | 7.1 | What is the required delivery timeline? | e.g. 8 weeks / 12 weeks / 16 weeks from PO (Recommended: 12 weeks) |
 | 7.2 | What packaging standards apply? *(Skip if: standard commercial packaging acceptable)* | e.g. Marine-grade export packing, weatherproof, shock-proof as per IS:xxxx (Recommended: MIL-STD or IS:xxxx for transit) |
 | 7.3 | What warranty period is required? | 12 months / 24 months / 36 months from final acceptance (Recommended: 12 months) |
-| 7.4 | What is the EMD (Earnest Money Deposit) amount / % of estimated cost? *(Skip if: exempt — MSME/Startup with valid Udyam certificate, or tender value below the EMD threshold)* | % of estimated cost (Recommended: 2–5% as per tender policy; exact value from RRCAT purchasing policy) |
-| 7.5 | What is the Performance Bank Guarantee (PBG) % and validity? *(Skip if: contract value below PBG threshold)* | 3% (MSME) / 5% (others) of contract value, valid through warranty + 60 days (Recommended per Manual for Procurement of Goods) |
-| 7.6 | What is the bid validity period? | 90 days / 120 days / 180 days (Recommended: 90 days) |
-| 7.7 | What liquidated damages (LD) rate and cap apply for delayed delivery? | Rate per week of delay + cap (Recommended: 0.5% per week of delayed portion, cap 10% of contract value — confirm with RRCAT policy) |
-| 7.8 | What payment terms apply? | e.g. no advance, payment on delivery + acceptance (Recommended); or advance against BG; GST extra as applicable |
-
-*Commercial-terms questions follow Indian government open-tendering practice (Manual for Procurement of Goods 2017); rationale in `docs/adr/006-commercial-terms.md` (ADR-006). Every figure is user-confirmed — recommended ranges are starting points only.*
 
 Ask all questions from sections 1-7 before generating. Confirm each answer before moving to the next question.
 
@@ -319,13 +311,6 @@ Use this skeleton when generating the final document. Replace `[CONFIRMED_VALUE]
 
 **Warranty:** "The complete assembly and all supplied hardware/software must carry a comprehensive replacement warranty against design defects, material flaws, and workmanship for a minimum period of 12 months from the date of final acceptance at the RRCAT facility."
 
-**EMD:** "The bidder shall furnish an Earnest Money Deposit of [CONFIRMED_EMD] along with the bid. The EMD shall be forfeited if the bidder withdraws or modifies the bid during the bid validity period or fails to furnish the PBG upon award."
-
-**Performance Bank Guarantee (PBG):** "The successful bidder shall furnish a Performance Bank Guarantee of [CONFIRMED_PBG_PCT]% of the contract value from a scheduled commercial bank, valid for the contract period plus the warranty period plus sixty (60) days."
-
-**Liquidated Damages:** "In case of delay in delivery beyond the stipulated timeline, liquidated damages at [CONFIRMED_LD_RATE]% of the value of the delayed portion per week of delay, subject to a maximum of [CONFIRMED_LD_CAP]% of the contract value, shall be levied. Time is of the essence."
-
-**Arbitration:** "Any dispute shall be referred to arbitration under the Arbitration and Conciliation Act, 1996. The arbitration proceedings shall be conducted at Indore."
 
 ---
 
@@ -413,24 +398,11 @@ f) [Any other document specific to equipment, e.g. Solar Yield Simulation Report
 
 ### 6. Delivery Terms
 
-**6.1 Delivery Terms**
-
 | Term | Detail |
 |:---|:---|
 | Delivery Timeline | [CONFIRMED_WEEKS] weeks from Purchase Order date |
 | Packaging | Standard commercial packing |
 | Warranty | [CONFIRMED_MONTHS] months from final acceptance against design defects, material flaws, and workmanship for complete assembly and all supplied hardware/software |
-
-**6.2 Financial & Commercial Terms** *[Include only if confirmed in checklist; drop rows not applicable — ADR-006]*
-
-| Term | Detail |
-|:---|:---|
-| Earnest Money Deposit (EMD) | [CONFIRMED_EMD] *(exempt if MSME/Startup with valid Udyam certificate, subject to tender policy)* |
-| Performance Bank Guarantee (PBG) | [CONFIRMED_PBG_PCT]% of contract value, valid until warranty expiry + 60 days |
-| Bid Validity | [CONFIRMED_BID_VALIDITY] days from bid opening |
-| Liquidated Damages | [CONFIRMED_LD_RATE]% of the value of the delayed portion per week of delay, subject to a maximum of [CONFIRMED_LD_CAP]% of contract value |
-| Payment Terms | [CONFIRMED_PAYMENT_TERMS] (GST extra as applicable) |
-| Arbitration | Disputes settled by arbitration under the Arbitration and Conciliation Act, 1996; seat and venue: Indore |
 
 ---
 
@@ -454,13 +426,10 @@ Rows are organized by **section header groups**. Each group starts with a merged
 | **Accessories / Civil Group** _(single merged cell, bold, if applicable)_ |
 | N | [Accessory param 1] | [Requirement] | |
 | ... | ... | ... | |
-| **Delivery & Commercial Terms** _(single merged cell, bold)_ |
+| **Delivery Terms** _(single merged cell, bold)_ |
 | N | Installation and Testing and Commissioning | Complete Integration of all components and working demonstration | |
 | N+1 | Delivery Timeline | [CONFIRMED_WEEKS] weeks from PO | |
 | N+2 | Warranty | [CONFIRMED_MONTHS] months from final acceptance | |
-| N+3 | EMD | [CONFIRMED_EMD] furnished with bid; forfeiture conditions as per tender | |
-| N+4 | PBG | [CONFIRMED_PBG_PCT]% of contract value; valid through warranty + 60 days | |
-| N+5 | Liquidated Damages | [CONFIRMED_LD_RATE]% per week, cap [CONFIRMED_LD_CAP]% | |
 
 **Signature of Bidder:** \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
 
@@ -711,7 +680,6 @@ The following content MUST be rendered in **bold** in the document:
 | **Technical Specs** | 3 (Parameter, Specification, Standard) | Parameter=left, Spec=left, Standard=center | Header row, spacer rows use merged single cell |
 | **Accessories** | 2 (Item, Specification) | Both left | Header row |
 | **Acceptance Criteria** | 3 (System, Test Protocol, Acceptance Criteria) | All left | Multi-line cells in Criteria column |
-| **Commercial Terms** | 2 (Term, Detail) | Both left | Header row |
 | **Compliance Sheet** | 4 (Sr.No, Parameter, Requirement, Vendor Compliance) | All left | Section-header rows use merged single cell |
 
 ### Section Header Rows in Compliance Table
@@ -735,7 +703,7 @@ Use lower-letter numbered list format `a)`, `b)`, `c)` etc. with:
 Insert page breaks before major section transitions:
 - Before Section 3 (Technical Requirements) — after BQC section
 - Before Section 5 (Acceptance Criteria) — after Bid Evaluation
-- Before Section 7 (Compliance Sheet) — after Commercial Terms
+- Before Section 7 (Compliance Sheet) — after Delivery Terms
 
 ### Document-level Properties
 

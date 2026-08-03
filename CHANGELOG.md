@@ -16,9 +16,6 @@ repo level.
 - Added structured generation: `templates/tender-schema.json`,
   `templates/tender.example.json`, `scripts/validate_tender_json.py`,
   `scripts/render_tender.py`.
-- Added commercial clauses (EMD, PBG, bid validity, liquidated damages,
-  payment terms, arbitration): checklist questions 7.4–7.8 and the Section 6.2
-  Financial & Commercial Terms block (ADR-006).
 - Added `docs/standards-glossary.md`, `CONTRIBUTING.md`, `CHANGELOG.md`,
   `LICENSE`.
 - Generalised the MarkItDown prerequisite path (no longer Windows-only).
