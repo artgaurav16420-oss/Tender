@@ -1,9 +1,17 @@
 ---
 name: rrcat-tender
 description: Generate RRCAT (Raja Ramanna Centre for Advanced Technology) procurement tender specifications following Indian government open-tendering rules. Use when user asks to create a tender specification, tender document, procurement spec, or mentions RRCAT, Raja Ramanna Centre, or Indore tender for atomic/research equipment.
-version: 1.9
+version: 1.10
 license: MIT
 changelog: |
+  ## 1.10 (2026-08-02)
+  - Added cross-platform sync scripts `scripts/sync.sh` / `scripts/sync.ps1` — one-command ADR-001 sync (UTF-8 normalization, copy directions, SHA256 + count verification; `--install` bootstraps the installed skill dir)
+  - Added automated verification `scripts/verify_tender.sh` (generated tenders) and `scripts/verify_repo.sh` (repo integrity)
+  - Added GitHub Actions CI (`.github/workflows/ci.yml`) and `.markdownlint-cli2.yaml`
+  - Added structured generation: `templates/tender-schema.json`, `templates/tender.example.json`, `scripts/validate_tender_json.py`, `scripts/render_tender.py`
+  - Added commercial clauses (EMD, PBG, bid validity, liquidated damages, payment terms, arbitration): checklist Qs 7.4-7.8 and Section 6.2 Financial & Commercial Terms block (ADR-006)
+  - Added `docs/standards-glossary.md`, `CONTRIBUTING.md`, `CHANGELOG.md`, `LICENSE`
+  - Generalised the MarkItDown prerequisite path (no longer Windows-only)
   ## 1.9 (2026-08-01)
   - Set _template.docx page size to A4 (11906 × 16838 twips = 21.0 cm × 29.7 cm); updated Formatting Rules to match
   ## 1.8 (2026-08-01)
@@ -95,7 +103,7 @@ If `officecli` is not recognized, ensure it is in your PATH or run `officecli in
 
 ### MarkItDown (for /tender-learn)
 
-Miniconda Python with MarkItDown: `pip install 'markitdown[all]'`
+Python with MarkItDown: `pip install 'markitdown[all]'` (Miniconda, system Python, or `uv tool install markitdown`). The `markitdown` command must be on `PATH`; on Windows with Miniconda, use `~/Miniconda3/python.exe -m markitdown` if the console script is not installed.
 
 ## Quick Start
 
@@ -104,14 +112,29 @@ Miniconda Python with MarkItDown: `pip install 'markitdown[all]'`
 3. Ask questions **one at a time** from the checklist. For each question, provide a Recommended Answer (standard range or option) to help the user choose. Only proceed after user confirms or provides their own value.
 4. Generate **only after** every checklist item has been explicitly confirmed.
 5. Run **Post-Generation Verification** before presenting to user.
-6. Use **officecli** to build the `.docx` from the RRCAT template. Do NOT use pandoc — it does not preserve the required formatting. Instead:
+6. Use **officecli** to build the `.docx` from the RRCAT template. Do NOT use pandoc — it does not preserve the required formatting (see ADR-002). Instead:
    a. Copy `_template.docx` (a blank RRCAT-formatted template) to the output filename.
    b. Use `officecli` to populate all content (tables, paragraphs, headings, bold text) following the **Formatting Rules** below.
    c. Populate all `{{key}}` placeholders with confirmed values via `officecli merge [output].docx [output].docx --data '[json]'`, or use `officecli set` for cell-level edits if merge is insufficient.
    d. Close the file: `officecli close [file].docx`
    e. Verify with: `officecli view [file].docx outline`
 7. Present the `.docx` to the user.
-8. Run **Sync** between installed skill and workspace.
+8. Run **Sync** between installed skill and workspace: `bash scripts/sync.sh` (Linux/macOS/Git-Bash) or `powershell -ExecutionPolicy Bypass -File scripts/sync.ps1` (Windows). First run: `bash scripts/sync.sh --install` to bootstrap the installed skill directory.
+
+> **Structured mode (optional):** instead of hand-writing the Markdown and issuing dozens of `officecli set` calls, capture the confirmed answers in `templates/tender.json`, validate with `scripts/validate_tender_json.py`, and render with `scripts/render_tender.py`. See [Structured Generation (optional)](#structured-generation-optional) below.
+
+### Structured Generation (optional)
+
+For repeatable, machine-verified tenders, use the structured pipeline instead of free-form generation plus manual officecli edits:
+
+1. Complete the Mandatory Review Checklist interview as usual (all questions confirmed).
+2. Write the confirmed answers as `templates/tender.json` (see `templates/tender-schema.json` and the worked `templates/tender.example.json`).
+3. Validate: `python3 scripts/validate_tender_json.py templates/tender.json`
+4. Render: `python3 scripts/render_tender.py templates/tender.json -o out/` → produces `out/<slug>.md` (full 7-section Markdown), an `officecli merge` data payload, and build notes.
+5. Gate: `bash scripts/verify_tender.sh out/<slug>.md` must exit 0 before presenting.
+6. Build the `.docx` from `_template.docx` per the officecli workflow in step 6 above, using the rendered Markdown as the authoritative content (or `officecli merge` with the emitted data payload if the template uses `{{key}}` placeholders).
+
+The JSON file doubles as an audit trail of the confirmed checklist answers (`checklist_answers`). Structured mode only changes the output step — it does NOT replace the Mandatory Review Checklist interview.
 
 ## Core Behavioral Rules
 
@@ -119,14 +142,14 @@ Miniconda Python with MarkItDown: `pip install 'markitdown[all]'`
 - **Zero assumptions** — never auto-calculate safety margins, tolerances, or ratings. Every value from the user.
 - **Mandatory clarification pause** — if any critical variable is missing or vague, STOP and ask.
 - **Generate only when complete** — do not generate until user has confirmed all details.
-- **Compliance sheet mandatory** — Section 7 (Vendor Compliance Sheet (Mandatory)) must be included in EVERY generated tender. Never omit it. Use the **4-column format** (Sr. No. | Parameter | Requirement | Vendor Compliance) with **section header rows** and **sequential numbering** as shown in the Output Template.
+- **Compliance sheet mandatory** — Section 7 (Vendor Compliance Sheet (Mandatory)) must be included in EVERY generated tender. Never omit it. Use the **4-column format** (Sr. No. | Parameter | Requirement | Vendor Compliance) with **section header rows** and **sequential numbering** as shown in the Output Template (format rationale: ADR-003).
 - **One question at a time** — present one checklist item, with a recommended answer range/option. Wait for response before proceeding. *(Exception: grouped confirmation mode, see Mandatory Review Checklist — batches a section at a time, still requiring explicit accept/override per item.)*
 - **Incomplete answer retry loop** — if user gives a vague / incomplete answer:
   - 1st time → restate the question with the recommended range, explain why the detail matters.
   - 2nd time → offer a concrete default value: "Shall I proceed with [default]? If not, please specify the exact value."
   - 3rd time → flag the block explicitly: "I cannot generate the tender without this detail. Please provide it or authorize me to use [default]."
   - If user still refuses or cannot provide → note the item as "To Be Confirmed by RRCAT" in the generated document and flag it in the cover note.
-- **Defensive procurement writing** — every clause must make it harder for unqualified bidders to fake compliance. If a requirement can be bypassed with 'Yes/No/Complied' without supporting evidence, rewrite it to demand verifiable proof (PO copies, completion certificates, OEM auth letters, photos, traceable part numbers).
+- **Defensive procurement writing** — every clause must make it harder for unqualified bidders to fake compliance. If a requirement can be bypassed with 'Yes/No/Complied' without supporting evidence, rewrite it to demand verifiable proof (PO copies, completion certificates, OEM auth letters, photos, traceable part numbers) (framework: ADR-005).
 - **Loophole scan** — before finalizing each generated section, actively look for loopholes a bad actor could exploit. Test each BQC criterion: "Could a low-quality vendor claim compliance here without actually having the capability?" If yes, tighten it.
 
 ## Mandatory Review Checklist
@@ -134,6 +157,8 @@ Miniconda Python with MarkItDown: `pip install 'markitdown[all]'`
 Ask every question in the order below. Each question **must** include a recommended answer (standard value, range, or option). Do not proceed to the next question until the current one is confirmed.
 
 **Conditional branching:** Some questions have a "(Skip if...)" note. If the condition is met, skip to the next unskipped question. This avoids asking irrelevant items.
+
+**Question selection criteria** (which questions exist, why, and their vulnerability categories) are documented in ADR-004.
 
 ### Interview Mode
 
@@ -215,6 +240,13 @@ Two modes are supported — default is **one question at a time** (full rigor); 
 | 7.1 | What is the required delivery timeline? | e.g. 8 weeks / 12 weeks / 16 weeks from PO (Recommended: 12 weeks) |
 | 7.2 | What packaging standards apply? *(Skip if: standard commercial packaging acceptable)* | e.g. Marine-grade export packing, weatherproof, shock-proof as per IS:xxxx (Recommended: MIL-STD or IS:xxxx for transit) |
 | 7.3 | What warranty period is required? | 12 months / 24 months / 36 months from final acceptance (Recommended: 12 months) |
+| 7.4 | What is the EMD (Earnest Money Deposit) amount / % of estimated cost? *(Skip if: exempt — MSME/Startup with valid Udyam certificate, or tender value below the EMD threshold)* | % of estimated cost (Recommended: 2–5% as per tender policy; exact value from RRCAT purchasing policy) |
+| 7.5 | What is the Performance Bank Guarantee (PBG) % and validity? *(Skip if: contract value below PBG threshold)* | 3% (MSME) / 5% (others) of contract value, valid through warranty + 60 days (Recommended per Manual for Procurement of Goods) |
+| 7.6 | What is the bid validity period? | 90 days / 120 days / 180 days (Recommended: 90 days) |
+| 7.7 | What liquidated damages (LD) rate and cap apply for delayed delivery? | Rate per week of delay + cap (Recommended: 0.5% per week of delayed portion, cap 10% of contract value — confirm with RRCAT policy) |
+| 7.8 | What payment terms apply? | e.g. no advance, payment on delivery + acceptance (Recommended); or advance against BG; GST extra as applicable |
+
+*Commercial-terms questions follow Indian government open-tendering practice (Manual for Procurement of Goods 2017); rationale in `docs/adr/006-commercial-terms.md` (ADR-006). Every figure is user-confirmed — recommended ranges are starting points only.*
 
 Ask all questions from sections 1-7 before generating. Confirm each answer before moving to the next question.
 
@@ -243,6 +275,8 @@ After generating the tender document, verify ALL of these:
 
 If any check fails, fix before presenting.
 
+**Automated checks:** Run `bash scripts/verify_tender.sh [output].md`. It FAILS on leftover placeholders, missing/out-of-order sections, compliance-sheet gaps, Sr. No. sequence errors, and tender-ref format; it WARNS on brand names (vendor neutrality) and non-SI units. Exit 0 = pass, 1 = fail (fix before presenting), 2 = warnings (review). For repo-wide integrity use `bash scripts/verify_repo.sh` (also run in CI).
+
 **7. Validate + visual check:** After all checks pass, run structural validation and optional visual verification:
 ```
 officecli validate [output].docx        # schema compliance — fail = fix before presenting
@@ -260,22 +294,14 @@ Direction differs by file type (per ADR-001):
 | Direction | Files |
 |---|---|
 | Installed → Workspace | `SKILL.md` |
-| Workspace → Installed | `Examples/*.md` |
+| Workspace → Installed | `Examples/*.md`, `AGENTS.md`, `_template.docx` |
 
-1. **Normalize encoding** — convert all `.md` files to UTF-8 without BOM to prevent tooling issues:
-   ```powershell
-   Get-ChildItem Examples/*.md | ForEach-Object {
-       $c = [System.IO.File]::ReadAllText($_.FullName)
-       [System.IO.File]::WriteAllText($_.FullName, $c, [System.Text.UTF8Encoding]::new($false))
-   }
-   ```
-2. Copy `SKILL.md` from installed → workspace (overwrite)
-3. Copy all `Examples/*.md` from workspace → installed (overwrite, since markitdown generates them in workspace)
-4. **Verify sync integrity:**
-   - Compare SHA256 hashes of `SKILL.md` (installed vs workspace) and `_template.docx` (installed vs workspace). Report mismatch if found.
-   - Count `Examples/*.md` in both locations; report if counts differ.
-   - Check that `AGENTS.md` exists in installed directory.
-5. Confirm: "Synced — all files verified."
+Run the sync script — it performs normalization, both copy directions, and integrity verification, and prints "Synced — all files verified." on success:
+
+- Linux / macOS / Git-Bash: `bash scripts/sync.sh` (first run: `bash scripts/sync.sh --install` to bootstrap the installed skill directory)
+- Windows PowerShell: `powershell -ExecutionPolicy Bypass -File scripts/sync.ps1` (first run: add `-Install`)
+
+Overridable with `RRCAT_SKILL_DIR=/path` (env var). The script verifies SHA256 of `SKILL.md` and `_template.docx` on both sides, `Examples/*.md` counts, and `AGENTS.md` presence in the installed directory.
 
 ## Output Template (Fill-in-the-Blanks Skeleton)
 
@@ -292,6 +318,14 @@ Use this skeleton when generating the final document. Replace `[CONFIRMED_VALUE]
 **PDI:** "A [CONFIRMED_TEST_NAME] must be performed prior to dispatch. This test must be physically witnessed by an RRCAT engineer at the vendor's manufacturing facility. The vendor shall provide a minimum of two (2) weeks advance notice prior to the test."
 
 **Warranty:** "The complete assembly and all supplied hardware/software must carry a comprehensive replacement warranty against design defects, material flaws, and workmanship for a minimum period of 12 months from the date of final acceptance at the RRCAT facility."
+
+**EMD:** "The bidder shall furnish an Earnest Money Deposit of [CONFIRMED_EMD] along with the bid. The EMD shall be forfeited if the bidder withdraws or modifies the bid during the bid validity period or fails to furnish the PBG upon award."
+
+**Performance Bank Guarantee (PBG):** "The successful bidder shall furnish a Performance Bank Guarantee of [CONFIRMED_PBG_PCT]% of the contract value from a scheduled commercial bank, valid for the contract period plus the warranty period plus sixty (60) days."
+
+**Liquidated Damages:** "In case of delay in delivery beyond the stipulated timeline, liquidated damages at [CONFIRMED_LD_RATE]% of the value of the delayed portion per week of delay, subject to a maximum of [CONFIRMED_LD_CAP]% of the contract value, shall be levied. Time is of the essence."
+
+**Arbitration:** "Any dispute shall be referred to arbitration under the Arbitration and Conciliation Act, 1996. The arbitration proceedings shall be conducted at Indore."
 
 ---
 
@@ -379,11 +413,24 @@ f) [Any other document specific to equipment, e.g. Solar Yield Simulation Report
 
 ### 6. Delivery Terms
 
+**6.1 Delivery Terms**
+
 | Term | Detail |
 |:---|:---|
 | Delivery Timeline | [CONFIRMED_WEEKS] weeks from Purchase Order date |
 | Packaging | Standard commercial packing |
 | Warranty | [CONFIRMED_MONTHS] months from final acceptance against design defects, material flaws, and workmanship for complete assembly and all supplied hardware/software |
+
+**6.2 Financial & Commercial Terms** *[Include only if confirmed in checklist; drop rows not applicable — ADR-006]*
+
+| Term | Detail |
+|:---|:---|
+| Earnest Money Deposit (EMD) | [CONFIRMED_EMD] *(exempt if MSME/Startup with valid Udyam certificate, subject to tender policy)* |
+| Performance Bank Guarantee (PBG) | [CONFIRMED_PBG_PCT]% of contract value, valid until warranty expiry + 60 days |
+| Bid Validity | [CONFIRMED_BID_VALIDITY] days from bid opening |
+| Liquidated Damages | [CONFIRMED_LD_RATE]% of the value of the delayed portion per week of delay, subject to a maximum of [CONFIRMED_LD_CAP]% of contract value |
+| Payment Terms | [CONFIRMED_PAYMENT_TERMS] (GST extra as applicable) |
+| Arbitration | Disputes settled by arbitration under the Arbitration and Conciliation Act, 1996; seat and venue: Indore |
 
 ---
 
@@ -407,10 +454,13 @@ Rows are organized by **section header groups**. Each group starts with a merged
 | **Accessories / Civil Group** _(single merged cell, bold, if applicable)_ |
 | N | [Accessory param 1] | [Requirement] | |
 | ... | ... | ... | |
-| **Delivery Terms** _(single merged cell, bold)_ |
+| **Delivery & Commercial Terms** _(single merged cell, bold)_ |
 | N | Installation and Testing and Commissioning | Complete Integration of all components and working demonstration | |
 | N+1 | Delivery Timeline | [CONFIRMED_WEEKS] weeks from PO | |
 | N+2 | Warranty | [CONFIRMED_MONTHS] months from final acceptance | |
+| N+3 | EMD | [CONFIRMED_EMD] furnished with bid; forfeiture conditions as per tender | |
+| N+4 | PBG | [CONFIRMED_PBG_PCT]% of contract value; valid through warranty + 60 days | |
+| N+5 | Liquidated Damages | [CONFIRMED_LD_RATE]% per week, cap [CONFIRMED_LD_CAP]% | |
 
 **Signature of Bidder:** \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
 
@@ -705,6 +755,8 @@ Prefer SI. If mixed/imperial used, show SI equivalent in parentheses (e.g. "150 
 
 Indian Standards (IS) take precedence over international standards. Use IS wherever available. Only use international standards (ISO, IEEE, ASME, ASTM, IEC) if no corresponding IS exists for the specific requirement.
 
+For a lookup of common standards and certifications (what they are, when to cite), see `docs/standards-glossary.md`.
+
 ### Off-the-shelf Verification
 
 For all standard catalogued / off-the-shelf items, require make & model number verifiable from the manufacturer's website. Add this to the bid documents requirement and to the compliance sheet row.
@@ -794,13 +846,12 @@ Miniconda Python with MarkItDown: `pip install 'markitdown[all]'`
    ```
    markitdown "Examples/[OriginalName].pdf" > "Examples/[OriginalName].md"
    ```
-   (Requires Miniconda Python with `pip install markitdown[all]` installed at `~/Miniconda3/python.exe`)
-5. **Normalize encoding** — convert all `.md` files to UTF-8 without BOM to prevent tooling issues:
-   ```powershell
-   Get-ChildItem Examples/*.md | ForEach-Object {
-       $c = [System.IO.File]::ReadAllText($_.FullName)
-       [System.IO.File]::WriteAllText($_.FullName, $c, [System.Text.UTF8Encoding]::new($false))
-   }
+   (Requires `markitdown` on PATH — see Prerequisites above.)
+5. **Normalize encoding** — convert all `.md` files to UTF-8 without BOM to prevent tooling issues. The sync script does this automatically (`bash scripts/sync.sh`); to run it standalone:
+   ```bash
+   for f in Examples/*.md; do
+     [ "$(head -c 3 "$f")" = "$(printf '\357\273\277')" ] && { tail -c +4 "$f" > "$f.tmp" && mv "$f.tmp" "$f"; }
+   done
    ```
    (Run from workspace root. Ensures consistency regardless of what markitdown or other tools produce.)
 6. Read the generated `.md` to review quality and fix any extraction issues.

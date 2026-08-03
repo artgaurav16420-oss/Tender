@@ -1,0 +1,49 @@
+# Vendor-neutrality heuristic wordlist.
+# verify_tender.sh flags any of these (case-insensitive) found in a generated
+# tender as WARN (brand names violate the vendor-neutrality rule). Extend this
+# list as new examples are learned via /tender-learn.
+#
+# One brand/family per line; lines starting with # are comments.
+
+Fluke
+Keysight
+Agilent
+Rohde & Schwarz
+Tektronix
+Siemens
+ABB
+Schneider Electric
+Danfoss
+Emerson
+Grundfos
+Kirloskar
+Crompton
+Havells
+Parker
+Swagelok
+Edwards
+Leybold
+Pfeiffer
+Atlas Copco
+Ingersoll Rand
+Hitachi
+Daikin
+Carrier
+York
+Trane
+Thermo Fisher
+Nikon
+Olympus
+Zeiss
+Leica
+Hamamatsu
+Coherent
+IPG Photonics
+TRUMPF
+Spectra-Physics
+Newport
+Thorlabs
+Busch
+Ebara
+Watts
+Bürkert

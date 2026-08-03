@@ -1,0 +1,43 @@
+# markdownlint-cli2 configuration for this documentation/skill repository.
+# Deliberately permissive: existing docs (SKILL.md, Examples/*, ADRs) use
+# compact tables, machine-extracted lists, and irregular numbering that trip
+# the stylistic rules. The disabled rules below are exactly the ones that
+# fire on the pre-existing corpus; the remaining (default) rules still catch
+# real problems in new/changed files (empty links, missing alt text, bad code
+# fences, spacing inside emphasis/code/links, reference-link hygiene, etc.).
+
+config:
+  default: true
+  MD001: false  # heading increment (machine-extracted examples skip levels)
+  MD004: false  # unordered list style (mixed - / * in extracted text)
+  MD009: false  # trailing spaces (extracted line wraps)
+  MD010: false  # hard tabs (tables/extracted text)
+  MD012: false  # multiple consecutive blank lines
+  MD013: false  # line length (long spec tables)
+  MD022: false  # blanks around headings (extracted docs)
+  MD024: false  # duplicate headings (section numbering across sections)
+  MD025: false  # single top-level heading (extracted docs have multiple h1)
+  MD026: false  # trailing punctuation in headings
+  MD028: false  # blank line inside blockquote (instruction blocks)
+  MD029: false  # ordered list prefix (lists restart per-section)
+  MD030: false  # list marker spacing (extracted text)
+  MD031: false  # blanks around fenced code blocks (command snippets)
+  MD032: false  # blanks around lists
+  MD033: false  # inline HTML (Output Template blockquotes)
+  MD034: false  # bare URLs (reference links)
+  MD035: false  # horizontal rule style (mixed --- / ***)
+  MD036: false  # emphasis used instead of a heading (bold labels)
+  MD040: false  # fenced code language missing (command snippets)
+  MD041: false  # first line in a file should be a top-level heading (frontmatter)
+  MD047: false  # file should end with a single newline
+  MD049: false  # emphasis style (mixed * / _ in extracted text)
+  MD055: false  # table pipe style (compact tables)
+  MD056: false  # table column count (irregular extracted tables)
+  MD058: false  # blanks around tables (compact spec tables)
+  MD060: false  # table column style (compact tables)
+
+globs:
+  - "**/*.md"
+
+ignores:
+  - "node_modules/**"

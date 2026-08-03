@@ -1,0 +1,130 @@
+{
+  "metadata": {
+    "item": "Re-circulating Chiller, 20 kW",
+    "quantity": "1 No",
+    "application": "laser cooling application",
+    "ref": "RRCAT/2026/PUR/001",
+    "date": "02/08/2026"
+  },
+  "scope": [
+    {
+      "item_no": 1,
+      "category": "Main Equipment",
+      "description": "Re-circulating Chiller, 20 kW",
+      "key_spec": "20 kW @10°C, ≥75 LPM, ≥5 bar, R404a, SS 304 tank ≥60 L",
+      "qty": "1 No"
+    },
+    {
+      "item_no": 2,
+      "category": "Accessories",
+      "description": "Water hose pipe, 1/2\" × 3 m, insulated with nitrile rubber, with connectors",
+      "key_spec": "1/2\" BSP, nitrile rubber insulation full length",
+      "qty": "2 Nos"
+    },
+    {
+      "item_no": 3,
+      "category": "Documentation",
+      "description": "O&M Manuals, Test Certificates",
+      "key_spec": "As per Section 4",
+      "qty": "2 sets"
+    }
+  ],
+  "bqc": {
+    "years_experience": "5",
+    "similar_installations": "2",
+    "certifications": ["ISO 9001:2015", "ISO 14001:2015"],
+    "oem_auth": true,
+    "govt_past_performance": true,
+    "regulatory": []
+  },
+  "technical": {
+    "main": [
+      { "param": "Cooling Capacity", "spec": "20 kW @ 10°C outlet temperature", "standard": "IS / ISO (as applicable)" },
+      { "param": "Flow Rate", "spec": "≥75 LPM (Stainless Steel 304 pump)", "standard": "IS / ISO (as applicable)" },
+      { "param": "Pump Head Pressure", "spec": "≥5 bar", "standard": "IS / ISO (as applicable)" },
+      { "param": "Temperature Set Range", "spec": "Ambient to 2°C", "standard": "IS / ISO (as applicable)" },
+      { "param": "Temperature Control Accuracy", "spec": "±1°C", "standard": "IS / ISO (as applicable)" },
+      { "param": "Refrigerant", "spec": "Zero ODP (R404a or equivalent)", "standard": "IS / ISO (as applicable)" },
+      { "param": "Tank Capacity", "spec": "≥60 L (SS 304)", "standard": "IS / ISO (as applicable)" },
+      { "param": "Material of Construction — Pump & Tank", "spec": "SS 304 (corrosion resistant)", "standard": "IS / ASTM equivalent" },
+      { "param": "Material of Construction — Outer Frame", "spec": "MS", "standard": "IS / ASTM equivalent" },
+      { "param": "Operating Environment", "spec": "Forced air cooling, ambient ≤40°C", "standard": "—" },
+      { "param": "Electrical Supply", "spec": "415V ±10%, three-phase, 50 Hz", "standard": "IS / IEC" }
+    ],
+    "accessories": [
+      { "item": "Water Hose Pipe (×2)", "spec": "1/2\" bore, 3 m length, nitrile rubber insulation full length, with inlet/outlet connectors", "standard": "IS / ISO (as applicable)" },
+      { "item": "Quick Connect Coupling (×2)", "spec": "1/2\" BSP to 1/2\" BSP", "standard": "IS / ISO (as applicable)" }
+    ],
+    "safety": [
+      { "feature": "Water Low Level Trip", "requirement": "Automatic shutdown on low water level" },
+      { "feature": "Over Temperature Trip", "requirement": "Automatic shutdown on over-temperature" },
+      { "feature": "Overload Alarm", "requirement": "Alarm on compressor / pump overload" },
+      { "feature": "Water Freezing Prevention", "requirement": "Protection against water freezing in cooling circuit" }
+    ]
+  },
+  "evaluation": {
+    "documents": [
+      "Vendor Compliance Sheet (signed & sealed)",
+      "Make & Model Nos of each component. The make & model number must be verifiable from OEM website/catalogue.",
+      "Technical Datasheets (all equipment)",
+      "OEM Authorization Letters (chiller)",
+      "GA Drawings (as applicable)"
+    ],
+    "weightage": "70% technical / 30% commercial",
+    "disqualification": [
+      "Non-compliance with BQC",
+      "Incomplete documentation",
+      "Conditional bids"
+    ]
+  },
+  "acceptance": {
+    "rejection_warning": true,
+    "tests": [
+      { "system": "Chiller", "protocol": "Performance test at RRCAT upon receipt", "criteria": "Cooling capacity within ±5% of rated 20 kW @ 10°C; no refrigerant leaks" },
+      { "system": "Pump & Flow", "protocol": "Flow and head measurement", "criteria": "≥75 LPM at ≥5 bar" },
+      { "system": "Controls", "protocol": "Functional test of trips and alarms", "criteria": "All trips/alarms operate as specified" }
+    ]
+  },
+  "delivery": {
+    "timeline_weeks": 12,
+    "packaging": "Standard commercial packaging suitable for road transit",
+    "warranty_months": 12
+  },
+  "commercial": {
+    "emd": "₹50,000 (or as per tender policy)",
+    "pbg_percent": "5",
+    "bid_validity_days": 90,
+    "ld_rate_percent": "0.5",
+    "ld_cap_percent": "10",
+    "payment_terms": "Payment on delivery and successful acceptance at RRCAT; GST extra as applicable",
+    "arbitration": "Disputes settled by arbitration under the Arbitration and Conciliation Act, 1996; seat and venue: Indore"
+  },
+  "compliance": {
+    "instructions": true,
+    "rows": [
+      { "group": "Main Equipment Group" },
+      { "param": "OEM Make and Model Number", "requirement": "Provide Make and Model number of all components (shall be verifiable from OEM website)" },
+      { "param": "ISO 9001 + ISO 14001 Certification", "requirement": "Valid certificates" },
+      { "param": "OEM Authorization", "requirement": "OEM authorization certificate on OEM letterhead" },
+      { "param": "Cooling Capacity", "requirement": "20 kW @ 10°C — technical datasheet with make & model" },
+      { "param": "Flow Rate", "requirement": "≥75 LPM (SS 304 pump) — technical datasheet" },
+      { "param": "Pump Head Pressure", "requirement": "≥5 bar — technical datasheet" },
+      { "param": "Electrical Supply", "requirement": "415V ±10%, 3-phase, 50 Hz — technical datasheet" },
+      { "group": "Delivery & Commercial Terms" },
+      { "param": "Delivery Timeline", "requirement": "12 weeks from PO" },
+      { "param": "Warranty", "requirement": "12 months from final acceptance" },
+      { "param": "EMD", "requirement": "EMD furnished with bid; forfeiture conditions as per tender" },
+      { "param": "PBG", "requirement": "5% of contract value; valid through warranty + 60 days" },
+      { "param": "Liquidated Damages", "requirement": "0.5% per week, cap 10% of contract value" }
+    ]
+  },
+  "checklist_answers": [
+    { "question": "1.1 Item description and quantity", "answer": "Re-circulating Chiller, 20 kW; 1 No" },
+    { "question": "1.2 Intended application", "answer": "Laser cooling at RRCAT" },
+    { "question": "7.4 EMD", "answer": "₹50,000 (or as per tender policy)" },
+    { "question": "7.5 PBG", "answer": "5% of contract value, valid through warranty + 60 days" },
+    { "question": "7.6 Bid validity", "answer": "90 days" },
+    { "question": "7.7 Liquidated damages", "answer": "0.5% per week, cap 10%" },
+    { "question": "7.8 Payment terms", "answer": "Payment on delivery and acceptance; GST extra" }
+  ]
+}

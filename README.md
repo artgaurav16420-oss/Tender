@@ -61,6 +61,17 @@ The skill learns from new tenders. If your equipment type isn't listed above, th
 
 The agent handles `.docx` generation automatically using officecli and the bundled RRCAT template (`_template.docx`). No manual conversion needed.
 
+## Repository Tooling
+
+- `scripts/sync.sh` / `scripts/sync.ps1` — one-command sync between workspace and installed skill (ADR-001) with UTF-8 normalization and integrity verification (`--install` bootstraps the installed skill dir)
+- `scripts/verify_tender.sh` — automated checks on a generated tender (placeholders, 7 sections, compliance sheet, Sr. No. sequence, vendor neutrality)
+- `scripts/verify_repo.sh` — repo integrity checks (also run in CI)
+- `scripts/validate_tender_json.py` / `scripts/render_tender.py` — structured generation from `templates/tender.json` (see SKILL.md "Structured Generation")
+- `docs/standards-glossary.md` — lookup of standards and certifications cited in tenders
+- `CHANGELOG.md`, `CONTRIBUTING.md`, `LICENSE` — project meta
+
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE).
+
+See also [CONTRIBUTING.md](CONTRIBUTING.md) and [CHANGELOG.md](CHANGELOG.md).
