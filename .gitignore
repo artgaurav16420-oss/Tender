@@ -25,3 +25,6 @@ node_modules/
 
 # Gemini workflow — not relevant for tender generation, kept for history
 karpathy-guidelines.md
+
+# Hermes local plans and session artifacts
+.hermes/
