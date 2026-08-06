@@ -38,6 +38,9 @@ import sys
 import tempfile
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import officecli_cleanup  # noqa: E402
+
 REPO = Path(r"D:\Software Development\rrcat-tender")
 TEMPLATE = REPO / "_template.docx"
 EXAMPLES_DIR = REPO / "Examples"
@@ -218,7 +221,16 @@ def process_example(md_path, values):
         res["error"] = (res["error"] + " " + repr(exc)).strip()
     finally:
         if tmpdir:
-            shutil.rmtree(tmpdir, ignore_errors=True)
+            # verify re-opened the docx after close (dump_texts/template_expected),
+            # so the resident officecli process still holds a handle and rmtree
+            # would fail. A best-effort close releases it; no-op if not open.
+            if copy:
+                try:
+                    run(["officecli", "close", copy])
+                except Exception:
+                    pass
+            if not officecli_cleanup.rmtree_retry(tmpdir):
+                print("CLEANUP_WARN|temp dir not removed after retries: " + tmpdir)
     res["passed"] = (
         res["copied"]
         and res["batch_ok"]
