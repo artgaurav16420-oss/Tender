@@ -5,7 +5,7 @@ Accepted (2026-05-25)
 
 ## Context
 The skill repository exists in two locations:
-- **Workspace**: `C:\Users\INP\Desktop\rrcat-tender\` (working copy with PDFs and generated `.md` files)
+- **Workspace**: `D:\Software Development\rrcat-tender\` (working copy with `.md` conversions and generated files)
 - **Installed skill**: `~/.agents/skills/rrcat-tender/` (loaded by OpenCode sessions)
 
 The `SKILL.md` originally contained two sync procedures that specified **opposite** file-copy directions for `Examples/*.md`:

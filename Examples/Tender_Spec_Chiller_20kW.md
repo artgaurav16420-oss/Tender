@@ -77,7 +77,7 @@ Procurement of Re-circulating Chiller, 20 kW cooling capacity for laser cooling 
 ### 4. Quality Assurance, Testing & Documentation
 
 **4.1 Testing:**
-- No pre-dispatch inspection (PDI) at vendor facility. The item shall be tested at RRCAT, Indore upon receipt. Final acceptance and payment release shall be contingent on successful testing at RRCAT.
+- The item shall be tested at RRCAT, Indore upon receipt. Final acceptance and payment release shall be contingent on successful testing at RRCAT.
 
 **4.2 Documentation to be submitted with the bid:**
 | Document | Requirement |

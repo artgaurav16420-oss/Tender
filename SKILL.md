@@ -1,9 +1,30 @@
 ---
 name: rrcat-tender
 description: Generate RRCAT (Raja Ramanna Centre for Advanced Technology) procurement tender specifications following Indian government open-tendering rules. Use when user asks to create a tender specification, tender document, procurement spec, or mentions RRCAT, Raja Ramanna Centre, or Indore tender for atomic/research equipment.
-version: 1.7
+version: 1.13
 license: MIT
 changelog: |
+  ## 1.13 (2026-08-03)
+  - Added "Never state what is not required" rule — items answered No/NA are omitted, not written as negative statements
+  - Added Negative-statement check to Post-Generation Verification; removed "No PDI" wording from chiller example + Pattern Library
+  ## 1.12 (2026-08-03)
+  - Corrected page size to true A4 (21.0 cm × 29.7 cm) in _template.docx and Page Layout table (was US Letter 21.59 × 27.94 cm)
+  ## 1.11 (2026-08-03)
+  - Removed "Tender Ref.: RRCAT/[YEAR]/PUR/[XXX] | Date:" line from Output Template, _template.docx, and Document-level Properties
+  ## 1.10 (2026-08-03)
+  - Converted reference .docx originals (Solar_PV_20kWp_Civil.docx, Cold_Storage_Container_40ft.docx) to Examples/*.md via markitdown
+  - Updated Detection Helper, Pattern Library, and Formatting Rules to reference the new .md files
+  - Deleted the .docx originals (removed from workspace and installed skill; removed from .gitignore exceptions and sync procedure)
+  ## 1.9 (2026-08-03)
+  - Fixed AGENTS.md: 7-section structure, officecli (not pandoc), updated reference formats
+  - Added reference .docx files (Solar_PV_20kWp_Civil.docx, Cold_Storage_Container_40ft.docx) to workspace; un-ignored in .gitignore
+  - Corrected ADR-001 workspace path, ADR-004 question/section structure, ADR-005 checklist count
+  - Removed stale Examples/*.pdf references (no PDFs bundled)
+  ## 1.8 (2026-07-31)
+  - Fixed Section 7 Delivery Terms question numbering (6.1-6.3 → 7.1-7.3)
+  - Fixed Output Template compliance sheet quote style (double → single quotes)
+  - Reconcile Scope table column count (3 → 5 columns matching template)
+  - Recommend officecli merge as primary population path in Quick Start
   ## 1.7 (2026-07-31)
   - Fixed OfficeCLI Command Reference: bold via run-level --prop, merged header via hmerge=restart, page break via --prop pageBreakBefore=true
   - Added Help-First Rule: consult officecli help before guessing property names or syntax
@@ -115,6 +136,7 @@ Miniconda Python with MarkItDown: `pip install 'markitdown[all]'`
   - 3rd time → flag the block explicitly: "I cannot generate the tender without this detail. Please provide it or authorize me to use [default]."
   - If user still refuses or cannot provide → note the item as "To Be Confirmed by RRCAT" in the generated document and flag it in the cover note.
 - **Defensive procurement writing** — every clause must make it harder for unqualified bidders to fake compliance. If a requirement can be bypassed with "Yes/No/Complied" without supporting evidence, rewrite it to demand verifiable proof (PO copies, completion certificates, OEM auth letters, photos, traceable part numbers).
+- **Never state what is not required** — a tender spec only states what IS required. If a checklist item is answered "No" / not applicable (e.g. PDI, ITC, spares, training, civil works), omit all related content from the tender. Do NOT write "X is not required", "No PDI", "N/A", or "not applicable". An omitted item is implicitly not required.
 - **Loophole scan** — before finalizing each generated section, actively look for loopholes a bad actor could exploit. Test each BQC criterion: "Could a low-quality vendor claim compliance here without actually having the capability?" If yes, tighten it.
 
 ## Mandatory Review Checklist
@@ -210,6 +232,7 @@ After generating the tender document, verify ALL of these:
 - [ ] Units are SI (or SI equivalent shown in parentheses)
 - [ ] **Anti-loophole check:** Scan every BQC criterion — can a spurious bidder claim compliance without evidence? If yes, tighten to require verifiable proof (PO copies, completion certs, OEM auth letters).
 - [ ] **Ambiguity check:** Is "Yes/No/Complied" explicitly disallowed in the compliance sheet? Add the rejection-warning instruction if missing.
+- [ ] **Negative-statement check:** No "not required", "No PDI", "N/A", or "not applicable" statements appear anywhere. Items answered "No" are simply omitted.
 - [ ] **Evidence demand check:** Every compliance row requires specific supporting documentary evidence (not just a tick mark).
 - [ ] **Gaps from examples checklist:** Scan learned patterns for the equipment type — does your tender include equivalent defensive clauses? (e.g. if Argon example had right-to-audit, does yours? If Microscope example blocked "spec copy as catalogue", does yours?)
 - [ ] **Placeholder Leak Gate:** Run `officecli query [output].docx 'p:contains("CONFIRMED")'` and `officecli query [output].docx 'p:contains("TBD")'`. Any hit = FAIL. Fix every remaining placeholder before presenting.
@@ -258,8 +281,6 @@ Use this skeleton when generating the final document. Replace `[CONFIRMED_VALUE]
 ---
 
 # TENDER SPECIFICATION FOR [EQUIPMENT NAME]
-
-**Tender Ref.:** RRCAT/[YEAR]/PUR/[XXX] | **Date:** [DD/MM/YYYY] *(`[XXX]` = sequential number, e.g. 001)*
 
 ---
 
@@ -494,13 +515,13 @@ officecli paths contain `[]` and prop values may contain `$`. Escaping rules:
 
 ## Formatting Rules
 
-These rules are sourced from the reference documents `Solar_PV_20kWp_Civil.docx` and `Cold_Storage_Container_40ft.docx` and MUST be followed for every generated tender.
+These rules are sourced from the reference documents `Examples/Solar_PV_20kWp_Civil.md` and `Examples/Cold_Storage_Container_40ft.md` and MUST be followed for every generated tender.
 
 ### Page Layout
 
 | Property | Value |
 |:---|:---|
-| Page Size | A4 (21.59 cm × 27.94 cm) |
+| Page Size | A4 (21.0 cm × 29.7 cm) |
 | Margins | Top/Bottom/Left/Right: 2.54 cm |
 | Header/Footer margin | 1.27 cm |
 | Columns | 1 |
@@ -657,7 +678,6 @@ Insert page breaks before major section transitions:
 | Char Spacing Control | doNotCompress |
 | Embed System Fonts | true |
 | Default Tab Stop | 1.27 cm |
-| Tender Ref Format | `RRCAT/[YEAR]/PUR/[XXX]` (`[XXX]` = 3-digit sequential number, e.g. 001) |
 
 ### Units
 
@@ -690,22 +710,21 @@ When the user requests a tender, use this lookup table to quickly identify the c
 | DTL tank, drift tube linac, vacuum vessel | DTL-Tank-TechnicalSpecifications&Drawings_Optimized.md | 4-stage PDI, CNC/CMM/CMM facilities, material test certs from NABL lab |
 | LEBT piping, SS pipeline, cryogenic piping | LEBTPiping-Specifications-Final_Optimized.md | TIG welding only, ER 308L consumables, no free issue material, 5 reference figures |
 | EOT crane, overhead crane, double girder | DraftPO_15_Ton_EOT_Crane.md | design approval before fabrication, QAP submission, PBG |
-| chiller, water chiller, cooling, laser cooling | Tender_Spec_Chiller_20kW.md | make/model traceable on OEM website, compliance sheet with clause ref IDs, no PDI at vendor |
+| chiller, water chiller, cooling, laser cooling | Tender_Spec_Chiller_20kW.md | make/model traceable on OEM website, compliance sheet with clause ref IDs, acceptance tested at RRCAT (no PDI clause stated) |
 | argon, UHP gas, gas supply, cylinder | Argon_Gas_Specification_RRCAT.md | COA per delivery, standard-wise failure table, plant visit right, PESO certification |
 | microscope, optical instrument | Modified_specifications_20260513.md | signed spec copy NOT accepted as catalogue, traceable part numbers, product catalogue mandatory |
 | lens, mirror, optical coating, laser optics | technical_specifications_for_lenses_and_mirrors.md | ⚠️ NEGATIVE EXAMPLE — no BQC section. Acceptance by RRCAT lab testing is de facto gate |
 | cryogenic PPE, safety gears, gloves, face shield | Technical_Specification_for_Cryogenic_Safety_Gears.md | "Yes/No/Complied NOT ALLOWED", LN2 temperature receipt inspection, EN/IS standards |
 | DC fan, axial fan, cooling fan | DC_axial_fans_for_automotive_use.md | exact values required in compliance sheet, make/model mandatory |
-| solar, PV, solar panel, solar module, on-grid, photovoltaic | Solar_PV_20kWp_Civil.docx | ALMM Enlistment Letter mandatory, PVSyst simulation report, 25-yr performance warranty, civil works in scope, rejection warning paragraph |
-| cold storage, container, refrigeration, 40 ft, insulated container | Cold_Storage_Container_40ft.docx | container modification scope explicitly defined, acceptance criteria with rejection warning, OEM or authorized dealers only |
+| solar, PV, solar panel, solar module, on-grid, photovoltaic | Solar_PV_20kWp_Civil.md | ALMM Enlistment Letter mandatory, PVSyst simulation report, 25-yr performance warranty, civil works in scope, rejection warning paragraph |
+| cold storage, container, refrigeration, 40 ft, insulated container | Cold_Storage_Container_40ft.md | container modification scope explicitly defined, acceptance criteria with rejection warning, OEM or authorized dealers only |
 
 **How to use:** Match the user's equipment description to the keywords column. Read the closest example. Study its defensive clauses (not its table format — that may differ). Ensure equivalent protections appear in your generated tender.
 
 ## Reference Examples
 
-This skill bundles real RRCAT tender specs in `Examples/`. Both formats available:
-- `*.md` — text-extracted Markdown (readable by the agent during generation)
-- `*.pdf` — original PDFs (human reference for formatting/layout)
+This skill bundles real RRCAT tender specs in `Examples/` as Markdown. Available formats:
+- `*.md` — text-extracted Markdown (readable by the agent during generation), including `Solar_PV_20kWp_Civil.md` and `Cold_Storage_Container_40ft.md` converted from the original RRCAT Word specs
 
 **Purpose of these examples (critical to understand):**
 
@@ -775,8 +794,8 @@ Miniconda Python with MarkItDown: `pip install 'markitdown[all]'`
    - Extract any unique/notable clauses (warranty, EMD, LD, standards).
 7. **Add a new row** to the **Learned Pattern Library** table below with the extracted data.
 8. **Update** the "Examples cover:" line in the **Reference Examples** section — append the new equipment type.
-8.5 **Validate Learned Pattern Library row** — Re-read the Learned Pattern Library table. Verify the new row has all 5 columns populated (Example name, equipment type, BQC strategy, anti-loophole clauses, defensive mechanisms). If any column is empty, fill it with "TBD — requires analysis" before proceeding.
-8.75 **Validate Examples count** — Count the rows in the Reference Examples "Examples cover" line and verify it matches the actual number of `.md` files in `Examples/`. If mismatch, update the count.
+8.5 **Validate Learned Pattern Library row** — Re-read the Learned Pattern Library table. Verify the new row has all 6 columns populated (Example, Equipment Type, Vulnerability Type, BQC strategy, anti-loophole clauses, defensive mechanisms). If any column is empty, fill it with "TBD — requires analysis" before proceeding.
+8.75 **Validate Examples count** — Count the `.md` files in `Examples/` and verify the Learned Pattern Library has one row per `.md` file. Update the count in `README.md` if it differs.
 9. **Confirm**:
    > "Learned from `[Name].md`. Pattern Library and Reference Examples updated."
 10. **Repeat** — ask if user wants to process the next unmatched PDF.
@@ -830,5 +849,5 @@ This table grows with every `/tender-learn` run. It captures **what actually pre
 | DTL-Tank-TechnicalSpecifications&Drawings_Optimized.md | DTL Tank Assembly (precision-machined SS304/304L vacuum vessel, OD 610mm, ID 577mm, L 1500mm, for drift tube linac, 1 set) | evidence-gap | ISO 9001 certified bidder; mandatory in-house facilities: CNC/VMC, CMM (≥1000mm), surface roughness measurement, He mass spectrometer leak detector; documentary evidence required | 4-stage acceptance at supplier site (material → weld → pre-finish → finish); Material test certs from NABL/ISO lab only; Ultrasonic testing per ASTM from NABL/ISO lab; Welding per ASME Sec IX; RT of all weld joints; Leak rate ≤1×10⁻⁹ mbar·L/s | 4-stage PDI; SAT at RRCAT (dimensional + surface finish + leak test); 6-month delivery; Guarantee/warranty; Compliance sheet with signature mandatory |
 | LEBTPiping-Specifications-Final_Optimized.md | LEBT Piping System (SS304L low conductivity water pipe line, 2" schedule 10, 50 line items incl. pipes/bends/flanges/valves/fasteners/hoses, 1 set, fabrication + supply + installation + testing) | evidence-gap | Min 3 years experience in SS pipeline supply, erection, commissioning & leak testing; client list + PO copies as evidence; no OEM requirement (fabrication/installation contract) | "Only TIG welding allowed"; ER 308L consumables per ASME/AWS A5.10; Argon shielding ≥99.99% purity; Hydro-test cert for Argon cylinder ≤5 yrs old; "No free issue material from RRCAT" — prevents scope creep; 5 reference figures for configuration; Material test reports required | Leak test at 10 bar + dye penetrant test; Ball valves per ANSI Class IV; Compliance sheet with qualification criteria; Cost comparison on total cost (material + fabrication + installation) |
 | Tender_Spec_Chiller_20kW.md | Re-circulating Chiller, 20 kW cooling capacity for laser cooling (1 No + accessories) | evidence-gap | OEM with ≥2 similar-capacity (20 kW+) chillers supplied to govt/PSU in last 3 yrs verifiable via PO/cert; ISO 9001:2015 + ISO 14001:2015; OEM auth cert; make/model traceable on OEM website | **'"Yes/No/Complied" NOT ALLOWED'** — exact compliance per parameter; "Incomplete or unsigned sheets may be summarily rejected"; "Make and model verifiable from manufacturer's website"; Warranty clock starts at "final acceptance at purchaser facility" | No PDI — acceptance & testing only at purchaser site (risk shifted to vendor); 12-mo warranty from final acceptance; FOR pricing; Compliance sheet with traceable clause ref IDs (BQC-x/TECH-x/COM-x) |
-| Solar_PV_20kWp_Civil.docx | 20 kW On-Grid Solar PV System with Civil Works (mounting shed + foundation + concrete flooring) | evidence-gap, bypass-risk | OEM or authorized dealers only; ISO 9001 certification; ALMM Enlistment Letter from MNRE mandatory | "ALMM Enlistment Letter" — prevents non-enlisted modules; make/model verifiable from OEM website; PVSyst simulation report required | 12-month workmanship warranty + 25-year linear performance warranty for PV modules; Rejection warning paragraph before acceptance criteria |
-| Cold_Storage_Container_40ft.docx | Cold Storage Container (4 TR, 4°C, 40 ft dry container modified) | evidence-gap | OEM or authorized dealers only; ISO 9001 certification | "The bidder has to modify a standard 40 ft dry shipping container" — scope explicitly defined; make/model verifiable from OEM website | Acceptance criteria table with specific parameters; Rejection warning paragraph before acceptance criteria |
+| Solar_PV_20kWp_Civil.md | 20 kW On-Grid Solar PV System with Civil Works (mounting shed + foundation + concrete flooring) | evidence-gap, bypass-risk | OEM or authorized dealers only; ISO 9001 certification; ALMM Enlistment Letter from MNRE mandatory | "ALMM Enlistment Letter" — prevents non-enlisted modules; make/model verifiable from OEM website; PVSyst simulation report required | 12-month workmanship warranty + 25-year linear performance warranty for PV modules; Rejection warning paragraph before acceptance criteria |
+| Cold_Storage_Container_40ft.md | Cold Storage Container (4 TR, 4°C, 40 ft dry container modified) | evidence-gap | OEM or authorized dealers only; ISO 9001 certification | "The bidder has to modify a standard 40 ft dry shipping container" — scope explicitly defined; make/model verifiable from OEM website | Acceptance criteria table with specific parameters; Rejection warning paragraph before acceptance criteria |

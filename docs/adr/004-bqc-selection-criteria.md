@@ -4,7 +4,7 @@
 Accepted (2026-07-31)
 
 ## Context
-The Mandatory Review Checklist contains 25 questions across 6 sections. Each question must have a clear rationale: what loophole it closes, what evidence it demands, and why its recommended answer is the default. Without documented criteria, questions become arbitrary and new equipment types get inconsistent BQC coverage.
+The Mandatory Review Checklist contains 31 questions across 7 sections. Each question must have a clear rationale: what loophole it closes, what evidence it demands, and why its recommended answer is the default. Without documented criteria, questions become arbitrary and new equipment types get inconsistent BQC coverage.
 
 ## Decision
 BQC questions are selected and structured using the following methodology:
@@ -23,7 +23,7 @@ Every question must address at least one of these vulnerability categories:
 - **Evidence demand is explicit in the recommended answer** — e.g., "3 installations (PO copies required)" not just "3 installations"
 - **No binary Yes/No questions** — every question demands a quantified or documented response
 
-### The 25 Questions by Category
+### The 31 Questions by Category
 
 **Section 1-2: Scope & Metadata (Questions 1.1-2.5)**
 - Establish what is being bought, for what purpose, and what ancillary services (ITC, training, civil) are in scope
@@ -44,13 +44,18 @@ Every question must address at least one of these vulnerability categories:
 - Material grades require IS/ASTM equivalents — no trade names
 - Tolerances/accuracy only asked when critical (Skip if not applicable)
 
-**Section 5: QA & Documentation (Questions 5.1-5.5)**
-- PDI tests must be witnessable at vendor facility
-- Third-party inspection (TPI) only for high-value/complex items
-- Bid documents require verifiable make/model (OEM website check)
-- FAT/SAT protocols required unless off-the-shelf
+**Section 5: Bid Evaluation Criteria (Questions 5.1-5.3)**
+- Defines which technical parameters are scored in bid evaluation (capacity, efficiency, warranty, delivery, past performance)
+- Sets technical vs. commercial weightage (70/30 recommended for critical equipment)
+- Defines mandatory disqualification criteria (BQC non-compliance, incomplete documentation, conditional bids)
 
-**Section 6: Commercial Terms (Questions 6.1-6.3)**
+**Section 6: Acceptance Criteria (Questions 6.1-6.4)**
+- PDI tests must be witnessable at vendor facility (hydrostatic, performance, pressure, functional)
+- Site acceptance tests at RRCAT after installation (SAT, performance verification, calibration)
+- Pass/fail criteria quantified (e.g. ±X% of rated capacity, no leaks, within tolerance)
+- Rejection warning paragraphs — incomplete/unsigned sheets may be summarily rejected
+
+**Section 7: Delivery Terms (Questions 7.1-7.3)**
 - Delivery timeline drives LD clauses
 - Packaging standards only for export/transit-sensitive items
 - Warranty minimum 12 months; 24+ for critical equipment
@@ -65,7 +70,7 @@ Questions with "(Skip if: ...)" are omitted from the interview flow when the con
 ## Alternatives Considered
 - **Fixed question set per equipment type**: Rejected — equipment varies; conditional branching handles variation with one universal checklist.
 - **Fewer questions with open-ended responses**: Rejected — open-ended responses miss specific evidence demands. Structured questions ensure no gap.
-- **More questions (30+)**: Rejected — diminishing returns; 25 covers all 4 vulnerability categories. Additional questions add fatigue without new gatekeeping.
+- **More questions (30+)**: Rejected — diminishing returns; 31 covers all 4 vulnerability categories. Additional questions add fatigue without new gatekeeping.
 
 ## Consequences
 - Every generated tender has defensible BQC tailored to the specific equipment

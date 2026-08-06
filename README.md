@@ -43,8 +43,10 @@ The agent will ask ~15-20 questions across these areas, one at a time:
 
 ## Equipment Types Covered
 
-The skill includes 20 real RRCAT tender examples covering:
+The skill includes 22 real RRCAT tender examples covering:
 
+- Solar PV systems with civil works (20 kWp, mounting shed, ALMM)
+- Cold storage containers (40 ft, 4 TR, refrigeration)
 - Cryogenic systems (dewars, LN2 containers, VJ hoses, cryostats, cryomodules)
 - Vacuum equipment (TMP modules, gauges, DTL tanks, piping systems)
 - Precision mechanics (EOT cranes, rail systems, tank assemblies)
