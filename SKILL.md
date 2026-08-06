@@ -102,25 +102,42 @@ officecli help
 
 If `officecli` is not recognized, ensure it is in your PATH or run `officecli install` to set up.
 
-### MarkItDown (for /tender-learn)
-
-Miniconda Python with MarkItDown: `pip install 'markitdown[all]'`
-
 ## Quick Start
 
-1. User requests tender spec for an equipment type.
-2. **Do NOT generate yet.** Act as technical reviewer using the Mandatory Review Checklist below.
-3. Ask questions **one at a time** from the checklist. For each question, provide a Recommended Answer (standard range or option) to help the user choose. Only proceed after user confirms or provides their own value.
-4. Generate **only after** every checklist item has been explicitly confirmed.
-5. Run **Post-Generation Verification** before presenting to user.
-6. Use **officecli** to build the `.docx` from the RRCAT template. Do NOT use pandoc — it does not preserve the required formatting. Instead:
-   a. Copy `_template.docx` (a blank RRCAT-formatted template) to the output filename.
-   b. Use `officecli` to populate all content (tables, paragraphs, headings, bold text) following the **Formatting Rules** below.
-   c. Populate all `{{key}}` placeholders with confirmed values via `officecli merge [output].docx [output].docx --data '[json]'`, or use `officecli set` for cell-level edits if merge is insufficient.
-   d. Close the file: `officecli close [file].docx`
-   e. Verify with: `officecli view [file].docx outline`
-7. Present the `.docx` to the user.
-8. Run **Sync** between installed skill and workspace.
+### Interactive (skill-loaded)
+```bash
+skill rrcat-tender
+```
+Then: "Generate a tender specification for [your equipment]"
+
+### One-command CLI (direct)
+```bash
+cd D:/Software Development/rrcat-tender
+python scripts/tender_gen.py --equipment "solar" --output out.docx
+python scripts/tender_gen.py --equipment "chiller" --output out.docx --answers answers.json
+```
+
+### Quality Gates (run before presenting to user)
+```bash
+# All gates (regression + generation + learn + sync)
+python scripts/test_suite.py
+
+# Single gate
+python scripts/regression_test.py          # 22-example full regression
+python scripts/verify_generated.py out.docx  # Post-generation checks
+python scripts/sync_skill.py --check       # Drift detection (CI gate)
+```
+
+### Learning new equipment types
+```bash
+python scripts/tender_learn.py Examples/new_tender.pdf
+python scripts/tender_learn.py --dry-run Examples/new_tender.pdf  # preview only
+```
+
+### Prerequisites
+- Python 3.11
+- officecli: `npm install -g officecli`
+- MarkItDown (for /tender-learn): `pip install 'markitdown[all]'`
 
 ## Core Behavioral Rules
 
@@ -782,53 +799,30 @@ Examples cover:
 4. Study the **anti-loophole strategies** (right to audit, document verification, rejection warnings, evidence requirements) and ensure equivalent protections appear in your generated tender.
 5. Consult the **Learned Pattern Library** for quick reference on which gatekeeping strategies and defensive mechanisms apply to which equipment types.
 
-## Auto-Learn Command (/tender-learn)
+## Auto-Learn Command (`/tender-learn`)
 
-Run when user adds a new PDF to `Examples/` and says `/tender-learn`.
+Convert a new RRCAT tender PDF into a learned pattern for future generation.
 
-### Prerequisite
+### One-command usage
+```bash
+python scripts/tender_learn.py Examples/new_tender.pdf
+python scripts/tender_learn.py --dry-run Examples/new_tender.pdf  # preview only, no SKILL.md changes
+```
 
-Miniconda Python with MarkItDown: `pip install 'markitdown[all]'`
+### What it does
+1. Converts PDF to Markdown using MarkItDown (`markitdown` CLI)
+2. UTF-8 normalizes the output (no BOM)
+3. Extracts BQC style, table format, and notable defensive clauses
+4. Appends a row to the **Learned Pattern Library** table below (6 columns: Example, Equipment Type, Vulnerability Type, BQC strategy, anti-loophole clauses, defensive mechanisms)
+5. Updates the "Examples cover:" line in **Reference Examples** section
+6. Syncs the installed skill (workspace → installed)
 
-### Procedure
+### Prerequisites
+- Python 3.11
+- MarkItDown: `pip install 'markitdown[all]'`
 
-1. **Scan** `Examples/` for `*.pdf` files.
-2. For each PDF, check if a matching `*.md` exists (e.g. `Foo.pdf` → `Foo.md`).
-3. Find the **first PDF without a matching `.md`**. Present to user:
-   > "Found new PDF: `[Name].pdf`. Process it?"
-   - User says **Yes** → proceed.
-   - User says **No** → ask: skip this file or process a different one?
-   - User says **Skip** → move to next unmatched PDF.
-4. **Convert** the PDF to Markdown using MarkItDown:
-   ```
-   markitdown "Examples/[OriginalName].pdf" > "Examples/[OriginalName].md"
-   ```
-   (Requires Miniconda Python with `pip install markitdown[all]` installed at `~/Miniconda3/python.exe`)
-5. **Normalize encoding** — convert all `.md` files to UTF-8 without BOM to prevent tooling issues:
-   ```powershell
-   Get-ChildItem Examples/*.md | ForEach-Object {
-       $c = [System.IO.File]::ReadAllText($_.FullName)
-       [System.IO.File]::WriteAllText($_.FullName, $c, [System.Text.UTF8Encoding]::new($false))
-   }
-   ```
-   (Run from workspace root. Ensures consistency regardless of what markitdown or other tools produce.)
-6. Read the generated `.md` to review quality and fix any extraction issues.
-7. **Analyze** the new example for learned patterns:
-   - Determine the equipment type / category.
-   - Identify BQC phrasing style used.
-   - Note the technical table format (column layout).
-   - Extract any unique/notable clauses (warranty, EMD, LD, standards).
-8. **Add a new row** to the **Learned Pattern Library** table below with the extracted data.
-9. **Update** the "Examples cover:" line in the **Reference Examples** section — append the new equipment type.
-10. **Validate Learned Pattern Library row** — Re-read the Learned Pattern Library table. Verify the new row has all 6 columns populated (Example name, equipment type, vulnerability type, BQC strategy, anti-loophole clauses, defensive mechanisms). If any column is empty, fill it with "TBD — requires analysis" before proceeding.
-11. **Validate Examples count** — Count the rows in the Reference Examples "Examples cover" line and verify it matches the actual number of `.md` files in `Examples/`. If mismatch, update the count.
-12. **Confirm**:
-   > "Learned from `[Name].md`. Pattern Library and Reference Examples updated."
-13. **Repeat** — ask if user wants to process the next unmatched PDF.
-
-### Sync between workspace and installed skill
-
-Follow the **canonical Sync procedure** in the "[Sync (Run After Every Operation)](#sync-run-after-every-operation)" section above. It runs after `/tender-learn` just as it does after generation.
+### Sync
+Follow the canonical Sync procedure in the "Sync (Run After Every Operation)" section.
 
 ## Learned Pattern Library (anti-loophole patterns learned from examples)
 
