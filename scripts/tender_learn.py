@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""tender_learn.py — executable /tender-learn pipeline for rrcat-tender skill.
+"""tender_learn.py executable /tender-learn pipeline rrcat-tender skill.
 
 Steps:
-1. If input is .pdf: convert via markitdown to Examples/<basename>.md.
-2. UTF-8 normalize the resulting .md.
-3. Rule-based pattern extraction (no LLM): scan for lines containing keywords.
-4. --dry-run: print extracted patterns + would-be SKILL.md update.
-5. Real mode: append row to Learned Pattern Library table in workspace SKILL.md.
+1. Input .pdf: convert markitdown Examples/<basename>.md.
+2. UTF-8 normalize resulting .md.
+3. Rule-based pattern extraction (no LLM) scan lines containing keywords.
+4. --dry-run: print extracted patterns would-be SKILL.md update.
+5. Real mode: append row Learned Pattern Library table workspace SKILL.md.
 6. Print summary.
 """
 
@@ -23,12 +23,13 @@ WORKSPACE = Path(r"D:/Software Development/rrcat-tender")
 EXAMPLES_DIR = WORKSPACE / "Examples"
 MARKITDOWN = r"C:/Users/INP/miniconda3/Scripts/markitdown"
 
-# Keywords for pattern extraction (rule-based)
+# Keywords pattern extraction (rule-based)
 PATTERN_KEYWORDS = [
     'compliance sheet', 'signed', 'rejection', 'ALMM', 'OEM',
     'authorization', 'warranty', 'leak', 'ASME', 'ISO', 'make',
     'model', 'acceptance', 'FAT', 'SAT', 'delivery', 'months', 'EMD'
 ]
+
 
 def sha256(path: Path) -> str:
     h = hashlib.sha256()
@@ -37,8 +38,9 @@ def sha256(path: Path) -> str:
             h.update(chunk)
     return h.hexdigest()
 
+
 def utf8_normalize(path: Path) -> bool:
-    """Read as bytes, decode utf-8 (replace errors), re-encode utf-8 no BOM. Return True if changed."""
+    """Read bytes, decode utf-8 (replace errors), re-encode utf-8 no BOM. Return True if changed."""
     raw = path.read_bytes()
     try:
         text = raw.decode("utf-8")
@@ -50,12 +52,13 @@ def utf8_normalize(path: Path) -> bool:
         return True
     return False
 
+
 def run_markitdown(input_path: Path, output_path: Path) -> bool:
-    """Convert PDF to Markdown using markitdown. Return True on success."""
+    """Convert PDF to Markdown using markitdown. Return True success."""
     if not MARKITDOWN or not os.path.exists(MARKITDOWN):
         print(f"WARN: markitdown not found at {MARKITDOWN}", file=sys.stderr)
         return False
-    # markitdown CLI: markitdown <input> -o <output>
+    # markitdown CLI: markitdown <input> <output>
     cmd = [MARKITDOWN, str(input_path), "-o", str(output_path)]
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
@@ -67,8 +70,9 @@ def run_markitdown(input_path: Path, output_path: Path) -> bool:
         print(f"WARN: markitdown exception: {e}", file=sys.stderr)
         return False
 
+
 def extract_patterns(md_path: Path) -> list[str]:
-    """Return unique lines containing any of PATTERN_KEYWORDS."""
+    """Return unique lines containing any PATTERN_KEYWORDS."""
     try:
         text = md_path.read_text(encoding="utf-8")
     except UnicodeDecodeError:
@@ -83,22 +87,24 @@ def extract_patterns(md_path: Path) -> list[str]:
                 break
     return sorted(found)
 
+
 def equipment_from_filename(filename: str) -> str:
     """Heuristic: strip extension, lowercase, take first significant word."""
     base = Path(filename).stem.lower()
     # Remove common suffixes/prefixes
     for affix in ['_20kwp', '_20kw', '_40ft', '_container', '_civil', '_solar', '_pv']:
         base = base.replace(affix, '')
-    # Split by non-alphanumeric and take first part
+    # Split non-alphanumeric take first part
     parts = re.split(r'[^a-z0-9]+', base)
     for p in parts:
-        if p and len(p) >= 2:
+        if len(p) > 2:
             return p
-    return base or "unknown"
+    return base if base else "unknown"
+
 
 def update_skill_md(workspace: Path, filename: str, equipment: str, patterns: list[str]) -> bool:
-    """Append a row to the Learned Pattern Library table in SKILL.md.
-    Returns True if the table was found and updated, False otherwise."""
+    """Append row Learned Pattern Library table SKILL.md.
+    Returns True table found updated, False otherwise."""
     skill_md = workspace / "SKILL.md"
     try:
         content = skill_md.read_text(encoding="utf-8")
@@ -106,7 +112,8 @@ def update_skill_md(workspace: Path, filename: str, equipment: str, patterns: li
         content = skill_md.read_text(encoding="utf-8", errors="replace")
 
     lines = content.splitlines()
-    # Find the Learned Pattern Library table header
+
+    # Find Learned Pattern Library table header
     header_idx = -1
     for i, line in enumerate(lines):
         if "Learned Pattern Library" in line:
@@ -116,7 +123,7 @@ def update_skill_md(workspace: Path, filename: str, equipment: str, patterns: li
         print("WARN: 'Learned Pattern Library' header not found in SKILL.md", file=sys.stderr)
         return False
 
-    # Find the start of the table (the next line that starts with '|')
+    # Find start table (the next line that starts with '|')
     table_start = -1
     for i in range(header_idx + 1, len(lines)):
         if lines[i].strip().startswith('|'):
@@ -126,7 +133,7 @@ def update_skill_md(workspace: Path, filename: str, equipment: str, patterns: li
         print("WARN: Table start not found after header", file=sys.stderr)
         return False
 
-    # Find the end of the table (last consecutive line starting with '|')
+    # Find end table (last consecutive line starting with '|')
     table_end = table_start
     for i in range(table_start, len(lines)):
         if lines[i].strip().startswith('|'):
@@ -134,17 +141,25 @@ def update_skill_md(workspace: Path, filename: str, equipment: str, patterns: li
         else:
             break
 
-    # Build the new row
-    patterns_str = ", ".join(patterns) if patterns else ""
-    new_row = f"| {filename} | {equipment} | {patterns_str} |"
+    # Build new 6-column row: Example | Equipment Type | Vulnerability Type | BQC Strategy | Anti-Loophole Clauses | Defensive Mechanisms
+    # Since rule-based extraction can't reliably classify, use "TBD — requires analysis" for columns 3-6
+    vuln_type = "TBD — requires analysis"
+    bqc_strategy = "TBD — requires analysis"
+    anti_loophole = "TBD — requires analysis"
+    defensive = "TBD — requires analysis"
+    # But we can put the extracted patterns as a hint in BQC Strategy
+    if patterns:
+        bqc_strategy = "; ".join(patterns[:3])  # first 3 as hint
 
-    # Insert after the last table row
+    new_row = f"| {filename} | {equipment} | {vuln_type} | {bqc_strategy} | {anti_loophole} | {defensive} |"
+
+    # Insert after last table row
     lines.insert(table_end + 1, new_row)
 
-    # Also update Reference Examples list if present (look for a line with 'Reference Examples')
+    # Update Reference Examples list (look for a line with 'Reference Examples')
     for i, line in enumerate(lines):
         if "Reference Examples" in line and i + 1 < len(lines) and lines[i + 1].strip().startswith('-'):
-            # Append a new bullet item after the last consecutive bullet
+            # Append new bullet item after last consecutive bullet
             j = i + 1
             while j < len(lines) and lines[j].strip().startswith('-'):
                 j += 1
@@ -159,9 +174,11 @@ def update_skill_md(workspace: Path, filename: str, equipment: str, patterns: li
         print(f"WARN: Failed to write SKILL.md: {e}", file=sys.stderr)
         return False
 
+
 def main():
-    ap = argparse.ArgumentParser(description="Run /tender-learn pipeline")
-    ap.add_argument("input_file", type=Path, help="Path to PDF or Markdown file")
+    parser = argparse.ArgumentParser(description="Run /tender-learn pipeline")
+    ap = parser
+    ap.add_argument("input_file", type=Path, help="Path PDF Markdown file")
     ap.add_argument("--dry-run", action="store_true", help="Do not modify SKILL.md")
     args = ap.parse_args()
 
@@ -202,15 +219,18 @@ def main():
     equipment = equipment_from_filename(md_path.name)
     print(f"Detected equipment: {equipment}")
 
-    # Would-be SKILL.md row
-    patterns_str = ", ".join(patterns) if patterns else ""
-    would_be_row = f"| {md_path.name} | {equipment} | {patterns_str} |"
+    # Would-be SKILL.md row (for dry-run display)
+    vuln_type = "TBD — requires analysis"
+    bqc_strategy = "TBD — requires analysis"
+    if patterns:
+        bqc_strategy = "; ".join(patterns[:3])
+    would_be_row = f"| {md_path.name} | {equipment} | {vuln_type} | {bqc_strategy} | TBD — requires analysis | TBD — requires analysis |"
     print(f"\nWould append to Learned Pattern Library table:")
     print(would_be_row)
 
     if args.dry_run:
         print("\nDRY-RUN: SKILL.md not modified.")
-        # Clean up if we converted a PDF
+        # Clean converted PDF
         if converted and md_path.exists():
             try:
                 md_path.unlink()
@@ -224,10 +244,10 @@ def main():
     if update_skill_md(WORKSPACE, md_path.name, equipment, patterns):
         print("SUCCESS: SKILL.md updated.")
     else:
-        print("FAIL: Could not update SKILL.md (see warnings above)", file=sys.stderr)
+        print("FAIL: could not update SKILL.md (see warnings above)", file=sys.stderr)
         return 1
 
-    # Clean up if we converted a PDF
+    # Clean converted PDF
     if converted and md_path.exists():
         try:
             md_path.unlink()
@@ -236,6 +256,7 @@ def main():
             pass
 
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())
