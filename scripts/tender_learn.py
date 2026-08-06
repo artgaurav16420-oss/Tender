@@ -19,9 +19,33 @@ import subprocess
 import sys
 from pathlib import Path
 
-WORKSPACE = Path(r"D:/Software Development/rrcat-tender")
+
+def _get_repo_root() -> Path:
+    return Path(__file__).resolve().parents[1]
+
+
+def _get_markitdown() -> str:
+    """Resolve markitdown executable: env override -> PATH -> common Windows locations."""
+    env = os.environ.get("RRCAT_MARKITDOWN")
+    if env:
+        return env
+    import shutil
+    w = shutil.which("markitdown")
+    if w:
+        return w
+    # Windows fallback locations
+    for cand in [
+        r"C:\Users\INP\miniconda3\Scripts\markitdown",
+        r"C:\Users\INP\miniconda3\Scripts\markitdown.exe",
+    ]:
+        if os.path.exists(cand):
+            return cand
+    return "markitdown"
+
+
+WORKSPACE = _get_repo_root()
 EXAMPLES_DIR = WORKSPACE / "Examples"
-MARKITDOWN = r"C:/Users/INP/miniconda3/Scripts/markitdown"
+MARKITDOWN = _get_markitdown()
 
 # Keywords pattern extraction (rule-based)
 PATTERN_KEYWORDS = [
@@ -39,14 +63,19 @@ def sha256(path: Path) -> str:
     return h.hexdigest()
 
 
-def utf8_normalize(path: Path) -> bool:
-    """Read bytes, decode utf-8 (replace errors), re-encode utf-8 no BOM. Return True if changed."""
-    raw = path.read_bytes()
+def utf8_normalize_in_memory(raw: bytes) -> bytes:
+    """Decode utf-8 (replace errors), re-encode utf-8 no BOM. Return normalized bytes."""
     try:
         text = raw.decode("utf-8")
     except UnicodeDecodeError:
         text = raw.decode("utf-8", errors="replace")
-    normalized = text.encode("utf-8")
+    return text.encode("utf-8")
+
+
+def utf8_normalize(path: Path) -> bool:
+    """Read file, normalize if needed, write back. Return True if changed."""
+    raw = path.read_bytes()
+    normalized = utf8_normalize_in_memory(raw)
     if normalized != raw:
         path.write_bytes(normalized)
         return True
@@ -58,7 +87,7 @@ def run_markitdown(input_path: Path, output_path: Path) -> bool:
     if not MARKITDOWN or not os.path.exists(MARKITDOWN):
         print(f"WARN: markitdown not found at {MARKITDOWN}", file=sys.stderr)
         return False
-    # markitdown CLI: markitdown <input> <output>
+    # markitdown CLI: markitdown <input> -o <output>
     cmd = [MARKITDOWN, str(input_path), "-o", str(output_path)]
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
@@ -177,10 +206,17 @@ def update_skill_md(workspace: Path, filename: str, equipment: str, patterns: li
 
 def main():
     parser = argparse.ArgumentParser(description="Run /tender-learn pipeline")
-    ap = parser
-    ap.add_argument("input_file", type=Path, help="Path PDF Markdown file")
-    ap.add_argument("--dry-run", action="store_true", help="Do not modify SKILL.md")
-    args = ap.parse_args()
+    parser.add_argument("input_file", type=Path, help="Path PDF/Markdown file")
+    parser.add_argument("--dry-run", action="store_true", help="Do not modify SKILL.md")
+    parser.add_argument("--workspace", type=Path, default=None, help="Override workspace root (default: repo root)")
+    parser.add_argument("--output-skill", type=Path, default=None, help="Override SKILL.md path for real mode (default: workspace/SKILL.md)")
+    parser.add_argument("--no-sync", action="store_true", help="Do not attempt to sync after update (default: sync not attempted here)")
+    args = parser.parse_args()
+
+    # Use override workspace or default repo root
+    ws = args.workspace if args.workspace else WORKSPACE
+    examples_dir = ws / "Examples"
+    skill_path = args.output_skill if args.output_skill else (ws / "SKILL.md")
 
     input_path = args.input_file.resolve()
     if not input_path.exists():
@@ -191,7 +227,7 @@ def main():
     md_path = None
     converted = False
     if input_path.suffix.lower() == ".pdf":
-        md_path = EXAMPLES_DIR / (input_path.stem + ".md")
+        md_path = examples_dir / (input_path.stem + ".md")
         print(f"Converting PDF to Markdown: {input_path.name} -> {md_path.name}")
         if not run_markitdown(input_path, md_path):
             print("FAIL: markitdown conversion failed", file=sys.stderr)
@@ -241,7 +277,7 @@ def main():
 
     # Real mode: update SKILL.md
     print("\nUpdating SKILL.md...")
-    if update_skill_md(WORKSPACE, md_path.name, equipment, patterns):
+    if update_skill_md(ws, md_path.name, equipment, patterns):
         print("SUCCESS: SKILL.md updated.")
     else:
         print("FAIL: could not update SKILL.md (see warnings above)", file=sys.stderr)
@@ -254,6 +290,9 @@ def main():
             print(f"Cleaned up temporary markdown: {md_path.name}")
         except Exception:
             pass
+
+    # Note: sync is NOT performed here. Run `sync_skill.py` separately after human review.
+    print("\nNote: Run `python scripts/sync_skill.py` separately after review to propagate changes.")
 
     return 0
 

@@ -14,8 +14,30 @@ import shutil
 import sys
 from pathlib import Path
 
-WORKSPACE = Path(r"D:/Software Development/rrcat-tender")
-DEFAULT_TARGET = Path(r"C:/Users/INP/AppData/Local/hermes/skills/rrcat-tender")
+
+def _get_repo_root() -> Path:
+    """Return repository root (workspace)."""
+    # Try __file__ first, then cwd
+    here = Path(__file__).resolve()
+    return here.parents[1]
+
+
+def _get_default_target() -> Path:
+    """Return default installed skill target path."""
+    # Env override
+    env_target = os.environ.get("RRCAT_SKILL_TARGET")
+    if env_target:
+        return Path(env_target)
+    # Windows default
+    if sys.platform == "win32":
+        home = Path.home()
+        return home / "AppData" / "Local" / "hermes" / "skills" / "rrcat-tender"
+    # Linux/macOS default
+    return Path.home() / ".agents" / "skills" / "rrcat-tender"
+
+
+WORKSPACE = _get_repo_root()
+DEFAULT_TARGET = _get_default_target()
 
 UTF8_NO_BOM = "utf-8"
 
@@ -28,14 +50,19 @@ def sha256(path: Path) -> str:
     return h.hexdigest()
 
 
-def utf8_normalize(path: Path) -> bool:
-    """Read bytes, decode utf-8 (replace errors), re-encode utf-8 no BOM. Return True if changed."""
-    raw = path.read_bytes()
+def utf8_normalize_in_memory(raw: bytes) -> bytes:
+    """Decode utf-8 (replace errors), re-encode utf-8 no BOM. Return normalized bytes."""
     try:
         text = raw.decode("utf-8")
     except UnicodeDecodeError:
         text = raw.decode("utf-8", errors="replace")
-    normalized = text.encode(UTF8_NO_BOM)
+    return text.encode(UTF8_NO_BOM)
+
+
+def utf8_normalize(path: Path) -> bool:
+    """Read file, normalize if needed, write back. Return True if changed."""
+    raw = path.read_bytes()
+    normalized = utf8_normalize_in_memory(raw)
     if normalized != raw:
         path.write_bytes(normalized)
         return True
@@ -54,11 +81,11 @@ def copy_and_verify(src: Path, dst: Path) -> tuple[bool, str]:
 def main():
     parser = argparse.ArgumentParser(description="Sync rrcat-tender skill")
     parser.add_argument("--target", type=Path, default=DEFAULT_TARGET,
-                    help="Installed skill directory (default: Hermes skills dir)")
+                        help="Installed skill directory (default: Hermes skills dir)")
     parser.add_argument("--dry-run", action="store_true",
-                    help="Print plan without writing")
+                        help="Print plan without writing")
     parser.add_argument("--check", action="store_true",
-                    help="Exit 1 if workspace/target differ (drift detection); no writes")
+                        help="Exit 1 if workspace/target differ (drift detection); no writes")
     args = parser.parse_args()
 
     target = args.target
@@ -76,7 +103,39 @@ def main():
     print(f"Dry-run:   {args.dry_run}")
     print(f"Check:     {args.check}")
 
-    # 1. UTF-8 normalize all Examples/*.md workspace
+    # In --check mode: compare normalized in-memory, NO writes
+    if args.check:
+        print("\n--- Drift check (no writes) ---")
+        mismatch = False
+        for md in sorted(examples_src.glob("*.md")):
+            if md.name == "SYNC_TEST_TEMP.md":
+                continue
+            raw = md.read_bytes()
+            norm = utf8_normalize_in_memory(raw)
+            dst = examples_dst / md.name
+            if not dst.exists():
+                print(f"  MISSING in target: {md.name}")
+                mismatch = True
+            elif sha256(dst) != hashlib.sha256(norm).hexdigest():
+                print(f"  DIVERGED: {md.name}")
+                mismatch = True
+            else:
+                print(f"  OK: {md.name}")
+        if skill_src.exists():
+            raw = skill_dst.read_bytes() if skill_dst.exists() else b""
+            norm = utf8_normalize_in_memory(raw)
+            if sha256(skill_src) != hashlib.sha256(norm).hexdigest():
+                print(f"  DIVERGED: SKILL.md")
+                mismatch = True
+            else:
+                print(f"  OK: SKILL.md")
+        else:
+            print(f"  MISSING in target: SKILL.md")
+            mismatch = True
+        print(f"\n{'IN SYNC' if not mismatch else 'DRIFT DETECTED'}")
+        return 0 if not mismatch else 1
+
+    # Normal mode: UTF-8 normalize all Examples/*.md workspace
     print("\n--- UTF-8 Normalization ---")
     normalized_count = 0
     for md in sorted(examples_src.glob("*.md")):
@@ -94,34 +153,6 @@ def main():
         print(f"  {skill_src} -> {skill_dst}")
         print("No files written.")
         return 0
-
-    # In --check mode: compute both side hashes, compare, exit 1 if any mismatch
-    if args.check:
-        print("\n--- Drift check ---")
-        mismatch = False
-        for md in sorted(examples_src.glob("*.md")):
-            if md.name == "SYNC_TEST_TEMP.md":
-                continue
-            dst = examples_dst / md.name
-            if not dst.exists():
-                print(f"  MISSING in target: {md.name}")
-                mismatch = True
-            elif sha256(md) != sha256(dst):
-                print(f"  DIVERGED: {md.name}")
-                mismatch = True
-            else:
-                print(f"  OK: {md.name}")
-        if skill_src.exists():
-            if sha256(skill_src) != sha256(skill_dst):
-                print(f"  DIVERGED: SKILL.md")
-                mismatch = True
-            else:
-                print(f"  OK: SKILL.md")
-        else:
-            print(f"  MISSING in target: SKILL.md")
-            mismatch = True
-        print(f"\n{'IN SYNC' if not mismatch else 'DRIFT DETECTED'}")
-        return 0 if not mismatch else 1
 
     # 2. Copy Examples/*.md -> target/Examples/
     print("\n--- Copy Examples -> target ---")

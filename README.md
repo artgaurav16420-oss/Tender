@@ -31,6 +31,52 @@ python scripts/tender_gen.py --equipment "chiller" --output out.docx --answers a
 | `test_suite.py` | All gates single runner | `python scripts/test_suite.py` | 0=all PASS |
 | `test_validate_template.py` | Template unit tests | `python scripts/test_validate_template.py` | 0=PASS |
 | `test_questionnaire.py` | Detection/coverage tests | `python scripts/test_questionnaire.py` | 0=PASS |
+| `test_learn_real_mode.py` | Reversible real-mode learning test | `python scripts/test_learn_real_mode.py` | 0=PASS |
+
+### Quality Gates (run before presenting to user)
+```bash
+# Fast checks (CI: ~2 min)
+python -m py_compile scripts/*.py
+python scripts/test_questionnaire.py
+python scripts/validate_template.py _template.docx
+python scripts/sync_skill.py --dry-run
+python scripts/tender_learn.py --dry-run Examples/Solar_PV_20kWp_Civil.md
+
+# Full gates (regression + generation + learn + sync)
+python scripts/test_suite.py
+
+# Single gate
+python scripts/regression_test.py          # 22-example full regression
+python scripts/verify_generated.py out.docx  # Post-generation checks
+python scripts/sync_skill.py --check       # Drift detection (CI gate)
+```
+
+### Learning new equipment types
+```bash
+# Dry-run (safe preview)
+python scripts/tender_learn.py --dry-run Examples/new_tender.pdf
+
+# Real mode (updates workspace SKILL.md, human review recommended)
+python scripts/tender_learn.py Examples/new_tender.pdf
+
+# With custom workspace (for testing)
+python scripts/tender_learn.py --workspace /tmp/test_ws --output-skill /tmp/test_ws/SKILL.md Examples/new_tender.pdf
+
+# Run reversible fixture test
+python scripts/test_learn_real_mode.py
+```
+
+### Prerequisites
+- Python 3.11
+- officecli: `npm install -g officecli`
+- MarkItDown (for /tender-learn): `pip install 'markitdown[all]'`
+
+### Environment Variables (optional overrides)
+```bash
+RRCAT_SKILL_TARGET=...    # Installed skill directory for sync
+RRCAT_OFFICECLI=...       # officecli executable path
+RRCAT_MARKITDOWN=...      # markitdown executable path
+```
 
 ## Tips for Best Results
 
@@ -68,10 +114,12 @@ Handled automatically by `tender_gen.py` using `officecli` and `_template.docx`.
 # All gates (regression + generation + learn + sync)
 python scripts/test_suite.py
 
-# Single gate
-python scripts/regression_test.py
-python scripts/verify_generated.py out.docx
-python scripts/sync_skill.py --check
+# Fast checks only (no full regression)
+python -m py_compile scripts/*.py
+python scripts/test_questionnaire.py
+python scripts/validate_template.py _template.docx
+python scripts/sync_skill.py --dry-run
+python scripts/tender_learn.py --dry-run Examples/Solar_PV_20kWp_Civil.md
 ```
 
 ## License

@@ -1,68 +1,61 @@
 #!/usr/bin/env python3
-"""verify_generated.py - Post-generation verification for tender_gen.py output.
+"""Post-generation verification for tender_gen.py outputs."""
 
-Checks (byte-accurate, via officecli dump captured in-process):
-  1. placeholder leaks       - no [CONFIRMED_*] tokens remain
-  2. rejection warning       - paragraph before Acceptance Criteria present
-  3. compliance instruction  - 'Yes/No/Complied NOT ALLOWED' text present
-  4. seven sections          - 7 heading-3 sections present, matching template
-  5. page breaks             - pageBreakBefore before sections 3, 5, 7 (warn)
-  6. pattern lines           - equipment-type defensive clauses present (optional)
-  7. zip validity            - output is a readable .docx (zip with document.xml)
-
-Expected texts are derived from the TEMPLATE at runtime (normalized whitespace
-comparison), so the checks adapt to template wording and are immune to the
-tool-result display mangling that drops spaces.
-"""
-
+import argparse
 import json
+import os
 import re
+import shutil
 import subprocess
 import sys
+import time
 import zipfile
 from pathlib import Path
 
-DEFAULT_TEMPLATE = "D:/Software Development/rrcat-tender/_template.docx"
+
+def repo_root() -> Path:
+    return Path(__file__).resolve().parents[1]
+
+
+def officecli() -> str:
+    value = os.environ.get("RRCAT_OFFICECLI") or shutil.which("officecli")
+    if value:
+        return value
+    return "officecli"
+
+
+DEFAULT_TEMPLATE = repo_root() / "_template.docx"
 
 
 def run_officecli(args):
-    """Run officecli, return (returncode, stdout)."""
-    result = subprocess.run(
-        args, capture_output=True, text=True, encoding="utf-8", errors="replace"
-    )
-    return result.returncode, result.stdout
+    return subprocess.run(args, capture_output=True, text=True, encoding="utf-8", errors="replace")
 
 
-def dump_texts(docx_path):
-    """Return (raw_text, ops) - raw concatenated body text and parsed dump ops."""
-    rc, out = run_officecli(["officecli", "dump", docx_path, "/body"])
-    if rc != 0:
-        raise RuntimeError(f"officecli dump failed for {docx_path}: {out[:300]}")
-    ops = json.loads(out)
-    texts = []
-    for op in ops:
-        if isinstance(op, dict):
-            t = (op.get("props") or {}).get("text")
-            if isinstance(t, str):
-                texts.append(t)
-    return "\n".join(texts), ops
+def norm(value: str) -> str:
+    return re.sub(r"\s+", " ", value or "").strip()
 
 
-def norm(s):
-    """Collapse all whitespace runs to single spaces, strip."""
-    return re.sub(r"\s+", " ", s or "").strip()
+def dump_texts(docx_path, retries=3, delay=0.5):
+    """Return (raw_text, ops) from officecli dump. Retry on Windows file lock."""
+    for attempt in range(retries):
+        result = run_officecli([officecli(), "dump", str(docx_path), "/body"])
+        if result.returncode == 0:
+            ops = json.loads(result.stdout)
+            texts = []
+            for op in ops:
+                if isinstance(op, dict):
+                    text = (op.get("props") or {}).get("text")
+                    if isinstance(text, str):
+                        texts.append(text)
+            return "\n".join(texts), ops
+        if attempt < retries - 1:
+            time.sleep(delay)
+    raise RuntimeError(f"officecli dump failed after {retries} attempts: {result.stdout[:300]}")
 
 
 def template_expected(template_path=DEFAULT_TEMPLATE):
-    """Derive expected texts from the template: rejection warning, compliance
-    instruction, section headings, page-break sections."""
     raw, ops = dump_texts(template_path)
-    expected = {
-        "rejection": None,
-        "compliance": None,
-        "headings": [],
-        "pagebreak_headings": [],
-    }
+    expected = {"rejection": None, "compliance": None, "headings": [], "pagebreak_headings": []}
     for op in ops:
         if not isinstance(op, dict):
             continue
@@ -73,147 +66,105 @@ def template_expected(template_path=DEFAULT_TEMPLATE):
         style = str(props.get("style", "")).lower()
         if "heading" in style and text.strip():
             expected["headings"].append(norm(text))
-            if str(props.get("pageBreakBefore", "")).lower() == "true":
-                expected["pagebreak_headings"].append(norm(text))
-        if expected["rejection"] is None and re.search(r"Failing\s+\S", text) and "acceptance criteria" in re.sub(r"\s+", " ", text).lower():
+        if str(props.get("pageBreakBefore", "")).lower() == "true":
+            expected["pagebreak_headings"].append(norm(text))
+        compact = norm(text).lower()
+        if expected["rejection"] is None and "failing" in compact and "acceptance criteria" in compact:
             expected["rejection"] = norm(text)
-        if expected["compliance"] is None and "NOT ALLOWED" in text:
+        if expected["compliance"] is None and "not allowed" in text.lower():
             expected["compliance"] = norm(text)
     return expected
 
 
-def verify_document(docx_path, expected_patterns=None, template_path=DEFAULT_TEMPLATE):
-    """Run all checks on docx_path. Returns results dict."""
-    results = {
-        "checks": {},   # name -> ("PASS" | "FAIL" | "WARN", detail)
-        "issues": [],
-    }
-    docx_path = str(docx_path)
+def add_check(results, name, passed, detail, issue=None, status=None):
+    state = status or ("PASS" if passed else "FAIL")
+    results["checks"][name] = {"status": state, "passed": bool(passed), "detail": detail}
+    if not passed and issue:
+        results["issues"].append(issue)
 
-    # 7. zip validity first (cheap, fatal if broken)
+
+def verify_document(docx_path, expected_patterns=None, template_path=DEFAULT_TEMPLATE):
+    results = {"checks": {}, "issues": []}
     try:
         with zipfile.ZipFile(docx_path) as zf:
-            names = zf.namelist()
-            ok = "word/document.xml" in names
-        results["checks"]["zip_valid"] = (
-            "PASS" if ok else "FAIL",
-            "valid .docx zip with word/document.xml" if ok else "missing word/document.xml",
-        )
-        if not ok:
-            results["issues"].append("Output is not a valid .docx archive")
+            valid = "word/document.xml" in zf.namelist()
+        add_check(results, "zip_valid", valid, "valid .docx zip" if valid else "missing word/document.xml", "Output is not a valid .docx archive")
     except Exception as exc:
-        results["checks"]["zip_valid"] = ("FAIL", f"not a zip: {exc}")
-        results["issues"].append(f"Output not readable: {exc}")
+        add_check(results, "zip_valid", False, str(exc), f"Output not readable: {exc}")
         return results
 
     try:
         raw, ops = dump_texts(docx_path)
     except Exception as exc:
-        results["checks"]["dump_readable"] = ("FAIL", str(exc))
-        results["issues"].append(f"officecli dump failed: {exc}")
+        add_check(results, "dump_readable", False, str(exc), f"officecli dump failed: {exc}")
         return results
+    add_check(results, "dump_readable", True, "officecli dump succeeded")
+    text = norm(raw)
 
-    # 1. placeholder leaks (raw text, byte-accurate)
-    leaks = re.findall(r"\[CONFIRMED_[A-Z_0-9]+\]", raw)
-    results["checks"]["placeholder_leaks"] = (
-        "PASS" if not leaks else "FAIL",
-        f"no [CONFIRMED_*] tokens remain" if not leaks
-        else f"{len(leaks)} leak(s): {sorted(set(leaks))}",
-    )
-    if leaks:
-        results["issues"].append(f"Placeholder leaks: {sorted(set(leaks))}")
+    leaks = sorted(set(re.findall(r"\[CONFIRMED_[A-Z_0-9]+\]", raw)))
+    unresolved = sorted(set(re.findall(r"\{\{[^{}]+\}\}|<TO\s+BE\s+FILLED>|\bTODO\b", raw, re.I)))
+    add_check(results, "placeholder_leaks", not leaks, "no [CONFIRMED_*] tokens remain" if not leaks else str(leaks), f"Placeholder leaks: {leaks}")
+    add_check(results, "unresolved_placeholders", not unresolved, "no unresolved template markers" if not unresolved else str(unresolved), f"Unresolved placeholders: {unresolved}")
 
-    # expected texts derived from template
     expected = template_expected(template_path)
-    norm_raw = norm(raw)
-
-    # 2. rejection warning
     if expected["rejection"]:
-        ok = expected["rejection"] in norm_raw
-        results["checks"]["rejection_warning"] = (
-            "PASS" if ok else "FAIL",
-            "rejection warning paragraph present" if ok else "rejection warning paragraph missing",
-        )
-        if not ok:
-            results["issues"].append("Rejection warning paragraph missing before Acceptance Criteria")
+        ok = norm(expected["rejection"]) in text
+        add_check(results, "rejection_warning", ok, "rejection warning present" if ok else "missing", "Rejection warning paragraph missing")
     else:
-        results["checks"]["rejection_warning"] = ("WARN", "template has no rejection warning to compare")
-
-    # 3. compliance instruction
+        add_check(results, "rejection_warning", True, "template warning unavailable", status="WARN")
     if expected["compliance"]:
-        ok = expected["compliance"] in norm_raw
-        results["checks"]["compliance_instruction"] = (
-            "PASS" if ok else "FAIL",
-            "compliance instruction text present" if ok else "compliance instruction text missing",
-        )
-        if not ok:
-            results["issues"].append("Compliance sheet instruction text missing")
+        ok = norm(expected["compliance"]) in text
+        add_check(results, "compliance_instruction", ok, "compliance instruction present" if ok else "missing", "Compliance sheet instruction missing")
     else:
-        results["checks"]["compliance_instruction"] = ("WARN", "template has no compliance text to compare")
+        add_check(results, "compliance_instruction", True, "template instruction unavailable", status="WARN")
 
-    # 4. seven sections
-    missing = [h for h in expected["headings"] if h not in norm_raw]
-    results["checks"]["seven_sections"] = (
-        "PASS" if not missing else "FAIL",
-        f"{len(expected['headings'])} section headings present" if not missing
-        else f"missing sections: {missing}",
-    )
-    if missing:
-        results["issues"].append(f"Missing section headings: {missing}")
+    headings = expected["headings"]
+    missing = [heading for heading in headings if heading not in text]
+    add_check(results, "seven_sections", not missing, f"{len(headings)} section headings present" if not missing else f"missing: {missing}", f"Missing section headings: {missing}")
+    positions = [text.find(heading) for heading in headings]
+    ordered = all(pos >= 0 for pos in positions) and positions == sorted(positions)
+    add_check(results, "section_order", ordered, "sections occur in template order" if ordered else f"positions: {positions}", "Sections are missing or out of order")
 
-    # 5. page breaks before sections 3, 5, 7 (warn-level)
     pb_texts = []
     for op in ops:
-        if not isinstance(op, dict):
-            continue
-        props = op.get("props") or {}
-        if str(props.get("pageBreakBefore", "")).lower() == "true" and isinstance(props.get("text"), str):
-            pb_texts.append(norm(props["text"]))
-    missing_pb = [h for h in expected["pagebreak_headings"] if h not in pb_texts]
-    results["checks"]["page_breaks"] = (
-        "PASS" if not missing_pb else "WARN",
-        f"page breaks before: {[h[:30] for h in pb_texts]}" if not missing_pb
-        else f"page breaks missing before: {missing_pb}",
-    )
+        if isinstance(op, dict):
+            props = op.get("props") or {}
+            if str(props.get("pageBreakBefore", "")).lower() == "true" and isinstance(props.get("text"), str):
+                pb_texts.append(norm(props["text"]))
+    missing_pb = [heading for heading in expected["pagebreak_headings"] if heading not in pb_texts]
+    add_check(results, "page_breaks", not missing_pb, "expected page breaks present" if not missing_pb else f"missing: {missing_pb}", status="WARN" if missing_pb else None)
 
-    # 6. equipment pattern lines
     if expected_patterns:
-        miss = []
-        for p in expected_patterns:
-            probe = norm(p)[:40]
-            if probe not in norm_raw:
-                miss.append(probe)
-        results["checks"]["pattern_lines"] = (
-            "PASS" if not miss else "FAIL",
-            f"{len(expected_patterns)} equipment-type clauses injected" if not miss
-            else f"missing clauses: {miss}",
-        )
-        if miss:
-            results["issues"].append(f"Equipment-type clauses missing: {miss}")
+        missing_patterns = [p for p in expected_patterns if norm(p)[:40] not in text]
+        add_check(results, "pattern_lines", not missing_patterns, "equipment clauses present" if not missing_patterns else f"missing: {missing_patterns}", f"Equipment-type clauses missing: {missing_patterns}")
 
     return results
 
 
 def print_results(results):
-    """Print PASS/FAIL lines (short markers, display-mangle-safe)."""
-    for name, (status, detail) in results["checks"].items():
-        print(f"[{status}] {name}: {detail}")
+    for name, check in results["checks"].items():
+        print(f"[{check['status']}] {name}: {check['detail']}")
     print(f"--- issues: {len(results['issues'])}")
     for issue in results["issues"]:
         print(f"  ! {issue}")
 
 
 def main():
-    if len(sys.argv) < 2:
-        print("usage: python verify_generated.py <docx> [pattern-file.json]", file=sys.stderr)
-        return 2
-    docx_path = sys.argv[1]
+    parser = argparse.ArgumentParser(description="Verify generated tender .docx")
+    parser.add_argument("docx")
+    parser.add_argument("pattern_file", nargs="?", help="JSON list of expected defensive clauses")
+    parser.add_argument("--json-report", type=Path, help="Write machine-readable report")
+    parser.add_argument("--template", type=Path, default=DEFAULT_TEMPLATE)
+    args = parser.parse_args()
     patterns = None
-    if len(sys.argv) > 2:
-        with open(sys.argv[2], encoding="utf-8") as f:
+    if args.pattern_file:
+        with open(args.pattern_file, encoding="utf-8") as f:
             patterns = json.load(f)
-    results = verify_document(docx_path, expected_patterns=patterns)
+    results = verify_document(args.docx, expected_patterns=patterns, template_path=args.template)
     print_results(results)
+    if args.json_report:
+        args.json_report.parent.mkdir(parents=True, exist_ok=True)
+        args.json_report.write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")
     return 0 if not results["issues"] else 1
 
 
