@@ -1,0 +1,40 @@
+name: rrcat-tender Quality Gates
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  quality-gates:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install officecli
+        run: npm install -g officecli
+        shell: bash
+
+      - name: Install markitdown
+        run: pip install markitdown
+        shell: bash
+
+      - name: Run unified test suite
+        run: python scripts/test_suite.py
+        shell: bash
+
+      - name: Run questionnaire unit tests
+        run: python scripts/test_questionnaire.py
+        shell: bash
+
+      - name: Sync drift check
+        run: python scripts/sync_skill.py --check
+        shell: bash
