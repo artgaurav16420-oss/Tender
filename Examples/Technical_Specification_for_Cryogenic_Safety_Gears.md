@@ -173,7 +173,7 @@ workmanship, starting from final acceptance at RRCAT.
 
 Section 6: Vendor Mandatory Compliance Sheet
 
-Instructions:  Indicate  compliance  clearly.  "Yes/No/Complied"  is  NOT  ALLOWED.  Attach
+Instructions:  Indicate  compliance  clearly.  'Yes/No/Complied'  is  NOT  ALLOWED.  Attach
 datasheets/test reports for each claim. Incomplete sheets may be rejected.
 
 Sr.

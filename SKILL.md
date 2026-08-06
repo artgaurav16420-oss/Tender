@@ -129,7 +129,7 @@ Miniconda Python with MarkItDown: `pip install 'markitdown[all]'`
 - **Mandatory clarification pause** — if any critical variable is missing or vague, STOP and ask.
 - **Generate only when complete** — do not generate until user has confirmed all details.
 - **Compliance sheet mandatory** — Section 7 (Vendor Compliance Sheet (Mandatory)) must be included in EVERY generated tender. Never omit it. Use the **4-column format** (Sr. No. | Parameter | Requirement | Vendor Compliance) with **section header rows** and **sequential numbering** as shown in the Output Template.
-- **One question at a time** — present one checklist item, with a recommended answer range/option. Wait for response before proceeding.
+- **One question at a time** — present one checklist item, with a recommended answer range/option. Wait for response before proceeding. *(Exception: grouped confirmation mode, see Mandatory Review Checklist — batches a section at a time, still requiring explicit accept/override per item.)*
 - **Incomplete answer retry loop** — if user gives a vague / incomplete answer:
   - 1st time → restate the question with the recommended range, explain why the detail matters.
   - 2nd time → offer a concrete default value: "Shall I proceed with [default]? If not, please specify the exact value."
@@ -144,6 +144,21 @@ Miniconda Python with MarkItDown: `pip install 'markitdown[all]'`
 Ask every question in the order below. Each question **must** include a recommended answer (standard value, range, or option). Do not proceed to the next question until the current one is confirmed.
 
 **Conditional branching:** Some questions have a "(Skip if...)" note. If the condition is met, skip to the next unskipped question. This avoids asking irrelevant items.
+
+### Interview Mode
+
+Two modes are supported — default is **one question at a time** (full rigor); use **grouped** mode when the user prefers speed.
+
+| Mode | Behavior | When to use |
+|---|---|---|
+| **One at a time** *(default)* | Ask each question, wait for confirmation before proceeding | New users, complex/critical equipment, uncertain requirements |
+| **Grouped confirmation** | Present all questions in a section as a single batched list (each with its recommended answer). User either accepts all recommended answers at once, or overrides specific items. Confirm per section, not per question. | Experienced users, standard equipment types, repeat tenders |
+
+**Grouped mode rules (must still be enforced):**
+- Each group still includes recommended answers for every item.
+- Every question must be explicitly confirmed or explicitly overridden — no silent skips.
+- Any item the user overrides or leaves open becomes "To Be Confirmed by RRCAT" per the retry-loop rules.
+- After all 7 groups are confirmed, run the same Post-Generation Verification.
 
 ### 1. Basic Tender Metadata
 
@@ -222,7 +237,7 @@ After generating the tender document, verify ALL of these:
 - [ ] All sections 1-7 are present and complete
 - [ ] Section 7 (Compliance Sheet) is present — **never omit this section**
 - [ ] Compliance sheet uses **4-column format**: Sr. No. | Parameter | Requirement | Vendor Compliance
-- [ ] Compliance sheet instruction text is present: "Instructions: Bidders must indicate compliance clearly for every parameter. 'Yes/No/Complied' NOT ALLOWED." (bold on "Instructions:" and "'Yes/No/Complied' NOT ALLOWED.")
+- [ ] Compliance sheet instruction text is present: "Instructions: Bidders must indicate compliance clearly for every parameter. 'Yes/No/Complied' NOT ALLOWED." (bold on "Instructions:" and **'Yes/No/Complied' NOT ALLOWED.**)
 - [ ] Compliance sheet has signature / seal / date blocks (Signature, Name, Company Seal, Date, Place — **bold labels**)
 - [ ] Section header rows use merged single cell spanning all 4 columns with equipment-group labels
 - [ ] Sr. No. values are **sequential integers** (1, 2, 3, ... N) with NO gaps
@@ -249,7 +264,14 @@ Present the `.docx` to the user.
 
 ## Sync (Run After Every Operation)
 
-Synchronize the installed skill (`~/.agents/skills/rrcat-tender/`) with the workspace (`project root`):
+Synchronize the installed skill (`~/.agents/skills/rrcat-tender/`) with the workspace (`project root`). **Run after every operation** (generation and `/tender-learn`).
+
+Direction differs by file type (per ADR-001):
+
+| Direction | Files |
+|---|---|
+| Installed → Workspace | `SKILL.md` |
+| Workspace → Installed | `Examples/*.md` |
 
 1. **Normalize encoding** — convert all `.md` files to UTF-8 without BOM to prevent tooling issues:
    ```powershell
@@ -260,7 +282,11 @@ Synchronize the installed skill (`~/.agents/skills/rrcat-tender/`) with the work
    ```
 2. Copy `SKILL.md` from installed → workspace (overwrite)
 3. Copy all `Examples/*.md` from workspace → installed (overwrite, since markitdown generates them in workspace)
-4. Confirm: "Synced."
+4. **Verify sync integrity:**
+   - Compare SHA256 hashes of `SKILL.md` (installed vs workspace) and `_template.docx` (installed vs workspace). Report mismatch if found.
+   - Count `Examples/*.md` in both locations; report if counts differ.
+   - Check that `AGENTS.md` exists in installed directory.
+5. Confirm: "Synced — all files verified."
 
 ## Output Template (Fill-in-the-Blanks Skeleton)
 
@@ -521,7 +547,7 @@ These rules are sourced from the reference documents `Examples/Solar_PV_20kWp_Ci
 
 | Property | Value |
 |:---|:---|
-| Page Size | A4 (21.0 cm × 29.7 cm) |
+| Page Size | A4 (21.0 cm × 29.7 cm) — matches `_template.docx` (11906 × 16838 twips) |
 | Margins | Top/Bottom/Left/Right: 2.54 cm |
 | Header/Footer margin | 1.27 cm |
 | Columns | 1 |
@@ -614,7 +640,7 @@ Instructions: Bidders must indicate compliance clearly for every parameter. 'Yes
 ```
 
 - "Instructions:" → bold
-- "'Yes/No/Complied' NOT ALLOWED." → bold
+- **'Yes/No/Complied' NOT ALLOWED.** → bold
 - Rest is normal weight
 
 ### Bold Text Usage
@@ -624,7 +650,7 @@ The following content MUST be rendered in **bold** in the document:
 - BQC label prefixes ("2.1 Equipment Manufacturer:", "2.2 Quality Certifications:")
 - Key values within BQC text (e.g. "**5 years**", "**ISO 9001**", "**OEM authorization certificate**")
 - Section 3.2 heading "3.2 Accessories"
-- Compliance sheet instruction text: "Instructions:" and **"'Yes/No/Complied' NOT ALLOWED."**
+- Compliance sheet instruction text: "Instructions:" and **'Yes/No/Complied' NOT ALLOWED.**
 - Signature labels: "Signature of Bidder:", "Name & Designation:", "Company Seal:", "Date:", "Place:"
 - Acceptance criteria warning keywords: "**below**", "**delivered product**", "**product**"
 
@@ -714,7 +740,7 @@ When the user requests a tender, use this lookup table to quickly identify the c
 | argon, UHP gas, gas supply, cylinder | Argon_Gas_Specification_RRCAT.md | COA per delivery, standard-wise failure table, plant visit right, PESO certification |
 | microscope, optical instrument | Modified_specifications_20260513.md | signed spec copy NOT accepted as catalogue, traceable part numbers, product catalogue mandatory |
 | lens, mirror, optical coating, laser optics | technical_specifications_for_lenses_and_mirrors.md | ⚠️ NEGATIVE EXAMPLE — no BQC section. Acceptance by RRCAT lab testing is de facto gate |
-| cryogenic PPE, safety gears, gloves, face shield | Technical_Specification_for_Cryogenic_Safety_Gears.md | "Yes/No/Complied NOT ALLOWED", LN2 temperature receipt inspection, EN/IS standards |
+| cryogenic PPE, safety gears, gloves, face shield | Technical_Specification_for_Cryogenic_Safety_Gears.md | 'Yes/No/Complied' NOT ALLOWED, LN2 temperature receipt inspection, EN/IS standards |
 | DC fan, axial fan, cooling fan | DC_axial_fans_for_automotive_use.md | exact values required in compliance sheet, make/model mandatory |
 | solar, PV, solar panel, solar module, on-grid, photovoltaic | Solar_PV_20kWp_Civil.md | ALMM Enlistment Letter mandatory, PVSyst simulation report, 25-yr performance warranty, civil works in scope, rejection warning paragraph |
 | cold storage, container, refrigeration, 40 ft, insulated container | Cold_Storage_Container_40ft.md | container modification scope explicitly defined, acceptance criteria with rejection warning, OEM or authorized dealers only |
@@ -732,7 +758,7 @@ These examples are NOT templates to copy. They exist to teach the AI:
 
 1. **Communication style** — how RRCAT communicates with bidders: precise, formal, leaving no room for misinterpretation
 2. **Defensive specification writing** — how to write specs that block spurious/unqualified bidders by requiring verifiable evidence (PO copies, completion certs, OEM auth letters, ISO certs, client lists with contact details)
-3. **Anti-loophole clauses** — phrases like "signed & sealed spec copy NOT accepted as catalogue", **"Yes/No/Complied" NOT ALLOWED**, "RRCAT reserves right to physically visit plant", "part numbers verifiable on OEM website"
+3. **Anti-loophole clauses** — phrases like "signed & sealed spec copy NOT accepted as catalogue", **'Yes/No/Complied' NOT ALLOWED**, "RRCAT reserves right to physically visit plant", "part numbers verifiable on OEM website"
 4. **Guidelines to supplier** — clear statements of what the supplier must provide, by when, and what happens if they don't
 5. **Protecting public money** — PBG, strict acceptance criteria, warranty terms that prevent retendering
 
@@ -778,7 +804,7 @@ Miniconda Python with MarkItDown: `pip install 'markitdown[all]'`
    markitdown "Examples/[OriginalName].pdf" > "Examples/[OriginalName].md"
    ```
    (Requires Miniconda Python with `pip install markitdown[all]` installed at `~/Miniconda3/python.exe`)
-4.5 **Normalize encoding** — convert all `.md` files to UTF-8 without BOM to prevent tooling issues:
+5. **Normalize encoding** — convert all `.md` files to UTF-8 without BOM to prevent tooling issues:
    ```powershell
    Get-ChildItem Examples/*.md | ForEach-Object {
        $c = [System.IO.File]::ReadAllText($_.FullName)
@@ -786,37 +812,23 @@ Miniconda Python with MarkItDown: `pip install 'markitdown[all]'`
    }
    ```
    (Run from workspace root. Ensures consistency regardless of what markitdown or other tools produce.)
-5. Read the generated `.md` to review quality and fix any extraction issues.
-6. **Analyze** the new example for learned patterns:
+6. Read the generated `.md` to review quality and fix any extraction issues.
+7. **Analyze** the new example for learned patterns:
    - Determine the equipment type / category.
    - Identify BQC phrasing style used.
    - Note the technical table format (column layout).
    - Extract any unique/notable clauses (warranty, EMD, LD, standards).
-7. **Add a new row** to the **Learned Pattern Library** table below with the extracted data.
-8. **Update** the "Examples cover:" line in the **Reference Examples** section — append the new equipment type.
-8.5 **Validate Learned Pattern Library row** — Re-read the Learned Pattern Library table. Verify the new row has all 6 columns populated (Example, Equipment Type, Vulnerability Type, BQC strategy, anti-loophole clauses, defensive mechanisms). If any column is empty, fill it with "TBD — requires analysis" before proceeding.
-8.75 **Validate Examples count** — Count the `.md` files in `Examples/` and verify the Learned Pattern Library has one row per `.md` file. Update the count in `README.md` if it differs.
-9. **Confirm**:
+8. **Add a new row** to the **Learned Pattern Library** table below with the extracted data.
+9. **Update** the "Examples cover:" line in the **Reference Examples** section — append the new equipment type.
+10. **Validate Learned Pattern Library row** — Re-read the Learned Pattern Library table. Verify the new row has all 6 columns populated (Example name, equipment type, vulnerability type, BQC strategy, anti-loophole clauses, defensive mechanisms). If any column is empty, fill it with "TBD — requires analysis" before proceeding.
+11. **Validate Examples count** — Count the rows in the Reference Examples "Examples cover" line and verify it matches the actual number of `.md` files in `Examples/`. If mismatch, update the count.
+12. **Confirm**:
    > "Learned from `[Name].md`. Pattern Library and Reference Examples updated."
-10. **Repeat** — ask if user wants to process the next unmatched PDF.
+13. **Repeat** — ask if user wants to process the next unmatched PDF.
 
 ### Sync between workspace and installed skill
 
-The skill is installed at `~/.agents/skills/rrcat-tender/` and the workspace is at the project root. **Sync after every operation** (generation and /tender-learn):
-
-| Direction | Files |
-|---|---|
-| Installed → Workspace | `SKILL.md` |
-| Workspace → Installed | `Examples/*.md` |
-
-**Sync procedure (run after every operation):**
-1. Copy `SKILL.md` from installed → workspace (overwrite workspace copy)
-2. Copy all `Examples/*.md` from workspace → installed (overwrite, since markitdown generates them in workspace)
-3. **Verify sync integrity:**
-   - Compare SHA256 hashes of `SKILL.md` (installed vs workspace) and `_template.docx` (installed vs workspace). Report mismatch if found.
-   - Count `Examples/*.md` in both locations; report if counts differ.
-   - Check that `AGENTS.md` exists in installed directory.
-4. Confirm: "Synced — all files verified."
+Follow the **canonical Sync procedure** in the "[Sync (Run After Every Operation)](#sync-run-after-every-operation)" section above. It runs after `/tender-learn` just as it does after generation.
 
 ## Learned Pattern Library (anti-loophole patterns learned from examples)
 
@@ -835,7 +847,7 @@ This table grows with every `/tender-learn` run. It captures **what actually pre
 | Flexible_Super_Insulated_Vacuum_Jacketed_Flexible.md | Flexible VJ Hose for LN2 (1/2" ID, 16 Nos) ⚠️ NEGATIVE EXAMPLE | missing-bqc, missing-rejection | **No BQC section** (gap) — no OEM gate, no past-performance filter | Helium leak test at 1×10⁻⁸ atm·cc/s explicitly stated; Vacuum retention 24-48h monitoring period | Pneumatic test at 1.1× design pressure; Heat in-leak <1 W/m; **Missing: compliance sheet, BQC section, signature blocks** |
 | Rev_Technical_Specifications_for_Container.md | 20' PUF Insulated Container (2 Nos, fabrication) | bypass-risk | OEM only with in-house welding/cutting/bending; ≥1 same-size PUF chamber in last 3 years | "Trouble-free lock guarantee — 3 years" (unusual — clear warranty language); Forklift pocket spec prevents handling damage | PUF thermal conductivity test mandatory; Air leak test per ISO 1496-2 |
 | Specification_Self_Pressurised_LN2_Container_INOX_Microcyl_Complied.md | Self-Pressurized LN2 Container (≥230L, 2 Nos) ⚠️ NEGATIVE EXAMPLE | missing-bqc, missing-rejection | OEM or Auth Certificate; mention make/model of regulator | Static evap rate "verified at RRCAT" on receipt — prevents inflated claims; spring-loaded auto-resetting PRV + rupture disc both required | Evap rate ≤2%/day verified post-delivery; **Missing: compliance sheet, formal BQC structure, signature blocks** |
-| Technical_Specification_for_Cryogenic_Safety_Gears.md | Cryogenic PPE (-196°C): gloves 10 pr, face shields 10, aprons 10 | evidence-gap | OEM or authorized agent only; valid ISO 9001 | **"Yes/No/Complied" NOT ALLOWED** — forces bidder to state exact compliance; EN/IS standards explicitly listed for each gear type | LN2 temperature receipt inspection (practical test); Multiple EU/IS safety standards enforced |
+| Technical_Specification_for_Cryogenic_Safety_Gears.md | Cryogenic PPE (-196°C): gloves 10 pr, face shields 10, aprons 10 | evidence-gap | OEM or authorized agent only; valid ISO 9001 | **'Yes/No/Complied' NOT ALLOWED** — forces bidder to state exact compliance; EN/IS standards explicitly listed for each gear type | LN2 temperature receipt inspection (practical test); Multiple EU/IS safety standards enforced |
 | Technical_Specifications_485.md | PESO Certified Transportable Horizontal LN2 Dewar (500L, 4 Nos) | evidence-gap | OEM or authorized rep; documents to be enclosed (open-ended) | Anti-sloshing baffles "≥3" (explicit min count prevents single-baffle shortcuts); PDI acceptance criteria: vacuum ≤10⁻³ mbar, leak ≤10⁻⁶ mbar·L/s | ASME BPVC Sec VIII Div 1 / ISO 21029-1 design; PESO cert mandatory |
 | Twin_Dewar_Specs.md | Twin Vacuum Insulated Horizontal LN2 Dewars (D1:330L + D2:150L) w/ external vaporizer (2 sets) | bypass-risk | OEM or authorized dealer; relevant docs required | Interconnected design explicitly specified (prevents two standalone dewars being delivered); anti-sloshing baffles "≥2 vertical" | Cryogenic Y-strainer 100µ + solenoid valve 24V DC locked into scope; D1 & D2 requirements listed separately to avoid confusion |
 | final_specifications.md | 10 TR Air Cooled Water Chiller (supply + ITC) ⚠️ NEGATIVE EXAMPLE | vendor-neutrality-violation, missing-bqc | OEM or authorized rep; ISO 14001:2015 + UL cert; proven record in last 3 years; CLIENT LIST WITH CONTACT DETAILS | **Contains brand names (Danfoss/Emerson, Grundfoss) — violates vendor neutrality rule**; "Client list with contact details" — enables RRCAT to verify claims independently; "BOM with part numbers and datasheets" forces supplier to commit to specific components | 24-month extended warranty; Commissioning cert; Fault diagnosis checklist; P-I and wiring diagrams mandatory; **Missing: compliance sheet, signature blocks** |

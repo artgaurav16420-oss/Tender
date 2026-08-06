@@ -1,5 +1,3 @@
-Karpathy Guidelines v3.6 MANDATORY: For all AI operations in this project, you MUST follow karpathy-guidelines.md as the primary behavioral ruleset.
-
 # Tender Skill — Agent Instructions
 
 This is a **document-generation skill** repo, not a codebase. No build, test, lint, or CI commands exist.
@@ -12,7 +10,7 @@ Generate procurement tender specifications for RRCAT (Raja Ramanna Centre for Ad
 
 - **`SKILL.md`** — canonical skill definition. Read this first.
 - **`docs/adr/`** — architecture decision records.
-- **`Examples/*.md`** — text-extracted tender specs (AI-readable reference), including `Solar_PV_20kWp_Civil.md` and `Cold_Storage_Container_40ft.md`.
+- `Examples/*.md` text-extracted tender specs (AI-readable reference) including `Solar_PV_20kWp_Civil.md` `Cold_Storage_Container_40ft.md`.
 
 ## Installed Skill
 
@@ -54,4 +52,4 @@ Over time, the skill learns from every new tender and improves future generation
 
 ## Example Reference
 
-All `Examples/*.md` files are real RRCAT specs. Use the `.md` files for AI-readable content and for original formatting reference.
+All `Examples/*.md` files are real RRCAT specs (PDFs are not currently bundled in the repo). Use the `.md` files for AI-readable content and for original formatting reference.

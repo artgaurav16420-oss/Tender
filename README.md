@@ -30,16 +30,17 @@ Generate procurement tender specifications for RRCAT, Indore, following Indian g
 
 ## What You'll Be Asked
 
-The agent will ask ~15-20 questions across these areas, one at a time:
+The agent will ask ~31 questions across 7 sections, one at a time (with recommended answers). For experienced users, a grouped confirmation mode batches each section so you can accept or override items in fewer round-trips:
 
-| Area | What's covered |
+| Section | What's covered |
 |---|---|
-| Basic Info | What equipment, how many, what's it for |
-| Scope of Supply | Main items, accessories, spares, installation, training |
-| Bidder Qualification (BQC) | OEM experience needed, past installations, certifications |
-| Technical Requirements | Ratings, materials, standards, environment, safety features |
-| Quality Assurance | Tests, inspections, documents to submit |
-| Commercial Terms | Delivery timeline, packaging, warranty period |
+| 1. Scope of Supply | Item description, quantity, application, accessories, spares, ITC, training, civil works |
+| 2. Bidder Qualification (BQC) | OEM experience, similar installations, certifications, OEM authorization, govt/PSU past performance |
+| 3. Technical Requirements | Ratings, materials, standards, operating environment, interfaces, tolerances, safety, finish |
+| 4. Bid Evaluation Criteria | Scoring parameters, technical/commercial weightage, disqualification criteria |
+| 5. Acceptance Criteria | PDI tests, site tests, pass/fail criteria, rejection warning |
+| 6. Delivery Terms | Delivery timeline, packaging, warranty |
+| 7. Vendor Compliance Sheet | (Not an interview item — generated automatically as the mandatory Section 7) |
 
 ## Equipment Types Covered
 
