@@ -18,9 +18,15 @@ def repo_root() -> Path:
 
 
 def officecli() -> str:
-    value = os.environ.get("RRCAT_OFFICECLI") or shutil.which("officecli")
+    # Prefer bare name: Windows resolves it via PATHEXT and the original
+    # proven-working invocation. A full .CMD path routes through cmd.exe,
+    # which splits unquoted metacharacters (& in example filenames like
+    # DTL-Tank...&Drawings_Optimized.docx) and breaks dumps.
+    value = os.environ.get("RRCAT_OFFICECLI")
     if value:
         return value
+    if shutil.which("officecli"):
+        return "officecli"
     return "officecli"
 
 
@@ -28,6 +34,9 @@ DEFAULT_TEMPLATE = repo_root() / "_template.docx"
 
 
 def run_officecli(args):
+    # Pass args as a list: Python's list2cmdline quotes each argument for
+    # cmd.exe, so metacharacters in paths (& in DTL-Tank...&Drawings.docx)
+    # survive. Do NOT pre-quote args manually - double escaping breaks it.
     return subprocess.run(args, capture_output=True, text=True, encoding="utf-8", errors="replace")
 
 
